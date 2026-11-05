@@ -1,0 +1,77 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Approved release tag, such as v0.1.0
+        required: true
+        type: string
+      approved:
+        description: The owner approves npm publication of this release
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    if: inputs.approved && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+      - name: Resolve approved release
+        id: release
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo '::error::tag must use vX.Y.Z. Select an approved release tag.'
+            exit 1
+          fi
+          SHA=$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")
+          if [ "$SHA" != "$GITHUB_SHA" ]; then
+            echo '::error::tag does not match the selected main commit. Dispatch from the release commit.'
+            exit 1
+          fi
+          git checkout --detach "$SHA"
+          node -e 'const version = require("./package.json").version; if (process.env.RELEASE_TAG !== "v" + version || version === "0.0.0") { console.error("package.json: version must match the tag and cannot be 0.0.0. Select a completed release."); process.exit(1); }'
+          printf 'sha=%s\n' "$SHA" >> "$GITHUB_OUTPUT"
+
+  checks:
+    needs: resolve
+    uses: ./.github/workflows/checks.yml
+    with:
+      ref: ${{ needs.resolve.outputs.sha }}
+
+  publish:
+    needs: [ resolve, checks ]
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-package
+          path: packed
+      - run: npm publish packed/*.tgz --provenance --access public

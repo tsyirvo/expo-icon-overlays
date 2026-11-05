@@ -1,0 +1,51 @@
+amends "package://github.com/jdx/hk/releases/download/v2.4.0/hk@2.4.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.4.0/hk@2.4.0#/Builtins.pkl"
+
+min_hk_version = "2.4.0"
+default_branch = "main"
+fail_fast = true
+
+local checks = new Mapping<String, Step> {
+  ["biome"] {
+    glob = List("**/*.js", "**/*.ts", "**/*.mts", "**/*.json", "**/*.jsonc")
+    check = "bunx biome check --files-ignore-unknown=true --no-errors-on-unmatched {{files}}"
+    fix = "bunx biome check --write --files-ignore-unknown=true --no-errors-on-unmatched {{files}}"
+  }
+  ["typecheck"] {
+    glob = List("**/*.ts", "**/*.mts", "**/*.js")
+    depends = "biome"
+    check = "bun run lint:ts"
+  }
+  ["test"] {
+    glob = List("**/*.ts", "**/*.mts", "**/*.js")
+    depends = "biome"
+    check = "bun run test"
+  }
+}
+
+steps = checks
+
+local fullChecks = new Mapping<String, Step> {
+  ["biome"] { check = "bun run lint:ci" }
+  ["typecheck"] { check = "bun run lint:ts" }
+  ["knip"] { check = "bun run knip" }
+  ["workflows"] { check = "actionlint" }
+  ["shell"] { check = "shellcheck scripts/*.sh" }
+  ["test"] {
+    depends = List("biome", "typecheck")
+    check = "bun run test"
+  }
+}
+
+hooks {
+  ["commit-msg"] {
+    steps { ["conventional-commit"] = Builtins.check_conventional_commit }
+  }
+  ["pre-commit"] {
+    steps = (checks) {
+      ["gitleaks"] = (Builtins.gitleaks) { scan = "staged" }
+    }
+  }
+  ["pre-push"] { steps = fullChecks }
+  ["check"] { steps = fullChecks }
+}

@@ -1,0 +1,183 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
+  "extends": ["ultracite/biome/core"],
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": [
+      "!!**/node_modules",
+      "!!build",
+      "!!fixtures/**/ios",
+      "!!fixtures/**/android"
+    ]
+  },
+  "linter": {
+    "rules": {
+      "complexity": { "noExcessiveCognitiveComplexity": "error" },
+      "style": {
+        "noNonNullAssertion": "error",
+        "useNamingConvention": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": [
+                  "**/options/**",
+                  "**/stamp/**",
+                  "**/native/**",
+                  "!**/options/index",
+                  "!**/options/index.ts",
+                  "!**/stamp/index",
+                  "!**/stamp/index.ts",
+                  "!**/native/index",
+                  "!**/native/index.ts"
+                ],
+                "importNamePattern": ".*",
+                "message": "Import another module through its public index."
+              }
+            ]
+          }
+        }
+      },
+      "suspicious": { "noExplicitAny": "error" }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/options/**"],
+      "linter": {
+        "rules": {
+          "correctness": { "noNodejsModules": "error" },
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "expo",
+                      "expo/**",
+                      "@expo/**",
+                      "**/stamp",
+                      "**/stamp/**",
+                      "**/native",
+                      "**/native/**",
+                      "pngjs",
+                      "pngjs/**",
+                      "@resvg/**"
+                    ],
+                    "importNamePattern": ".*",
+                    "message": "Options validate values without Expo or rendering."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/stamp/**"],
+      "linter": {
+        "rules": {
+          "correctness": { "noNodejsModules": "error" },
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "expo",
+                      "expo/**",
+                      "@expo/**",
+                      "**/options",
+                      "**/options/**",
+                      "**/native",
+                      "**/native/**"
+                    ],
+                    "importNamePattern": ".*",
+                    "message": "Stamp renders pixels without Expo, options parsing or project files."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/stamp/rasterize.ts"],
+      "linter": {
+        "rules": {
+          "correctness": { "noNodejsModules": "off" },
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "expo",
+                      "expo/**",
+                      "@expo/**",
+                      "node:*",
+                      "node:*/**",
+                      "!node:fs",
+                      "!node:fs/promises",
+                      "!node:path",
+                      "!node:module",
+                      "!node:url",
+                      "fs",
+                      "fs/**",
+                      "path",
+                      "**/options",
+                      "**/options/**",
+                      "**/native",
+                      "**/native/**"
+                    ],
+                    "importNamePattern": ".*",
+                    "message": "Only rasterize.ts may read package WASM and font assets."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/native/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "**/options/**",
+                      "**/stamp/**",
+                      "!**/options/index",
+                      "!**/options/index.ts",
+                      "!**/stamp/index",
+                      "!**/stamp/index.ts"
+                    ],
+                    "importNamePattern": ".*",
+                    "message": "Use the public options and stamp interfaces."
+                  },
+                  {
+                    "group": ["pngjs", "pngjs/**", "@resvg/**"],
+                    "importNamePattern": ".*",
+                    "message": "Image codecs and rendering belong to stamp."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

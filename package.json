@@ -1,0 +1,64 @@
+{
+  "name": "expo-icon-overlays",
+  "version": "0.0.0",
+  "description": "Text overlays for Expo app icons at prebuild time",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tsyirvo/expo-icon-overlays.git"
+  },
+  "license": "MIT",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
+    "./app.plugin.js": "./app.plugin.js",
+    "./package.json": "./package.json"
+  },
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "files": [
+    "build/",
+    "app.plugin.js",
+    "assets/",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "check:fixtures": "bun run build && cd fixtures/expo-app && bun install --frozen-lockfile && bun expo prebuild --no-install",
+    "check:package": "bun run build && sh scripts/check-package.sh",
+    "dev": "tsdown --watch",
+    "format": "biome format --write --files-ignore-unknown=true .",
+    "format:check": "biome format --files-ignore-unknown=true .",
+    "hooks:check": "mise exec -- hk check --all",
+    "hooks:fix": "mise exec -- hk fix --all",
+    "hooks:install": "mise exec -- hk install --mise",
+    "knip": "knip",
+    "lint": "biome check --write --files-ignore-unknown=true .",
+    "lint:ci": "biome ci --files-ignore-unknown=true .",
+    "lint:ts": "tsc --noEmit",
+    "preview": "node --eval \"console.info('Contact sheet rendering starts in Stage 2. This scaffold does not render overlays.')\"",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/node": "26.6.5",
+    "expo": "58.0.22",
+    "knip": "6.43.0",
+    "tsdown": "0.23.0",
+    "typescript": "6.0.3",
+    "ultracite": "8.1.0",
+    "vitest": "5.0.5"
+  },
+  "peerDependencies": {
+    "expo": "^58.0.0"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

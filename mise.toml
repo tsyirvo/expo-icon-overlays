@@ -1,0 +1,17 @@
+[tools]
+node = "26"
+bun = "1.4.4"
+hk = "2.4.0"
+gitleaks = "8.30.1"
+actionlint = "1.7.12"
+shellcheck = "0.11.0"
+
+[env]
+# Keep the repo's locally installed binaries on the PATH.
+_.path = ["node_modules/.bin"]
+# Let hk resolve tools without shell activation.
+HK_MISE = "1"
+
+[hooks]
+# CI installs only selected tools and does not need local Git hooks.
+postinstall = "if [ -z \"${CI:-}\" ]; then mise exec -- hk install --mise; fi"

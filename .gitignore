@@ -1,0 +1,12 @@
+node_modules/
+build/
+coverage/
+preview/
+*.tgz
+.DS_Store
+.env
+.env.*
+*.local
+fixtures/**/.expo/
+fixtures/**/ios/
+fixtures/**/android/

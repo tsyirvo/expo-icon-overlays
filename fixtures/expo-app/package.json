@@ -1,0 +1,11 @@
+{
+  "name": "icon-overlays-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo/AppEntry.js",
+  "dependencies": {
+    "expo": "58.0.22",
+    "react": "19.3.0",
+    "react-native": "0.88.1"
+  }
+}
