@@ -39,14 +39,22 @@
     "lint": "biome check --write --files-ignore-unknown=true .",
     "lint:ci": "biome ci --files-ignore-unknown=true .",
     "lint:ts": "tsc --noEmit",
-    "preview": "node --eval \"console.info('Contact sheet rendering starts in Stage 2. This scaffold does not render overlays.')\"",
-    "test": "vitest run --passWithNoTests"
+    "preview": "bun scripts/preview.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2",
+    "pngjs": "7.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3",
+    "@types/fontkit": "2.0.8",
     "@types/node": "26.6.5",
+    "@types/pngjs": "6.0.5",
     "expo": "58.0.22",
+    "fontkit": "2.0.4",
     "knip": "6.43.0",
+    "pixelmatch": "7.1.0",
     "tsdown": "0.23.0",
     "typescript": "6.0.3",
     "ultracite": "8.1.0",

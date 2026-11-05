@@ -31,6 +31,8 @@
   },
   "include": [
     "src/**/*.ts",
+    "tests/**/*.ts",
+    "scripts/**/*.ts",
     "tsdown.config.mts",
     "vitest.config.mts",
     "fixtures/expo-app/app.config.js"

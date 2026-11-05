@@ -1,10 +1,10 @@
 # expo-icon-overlays — a community package
 
-Text overlays on Expo app icons, currently a scaffold.
+Text overlays on Expo app icons, under development.
 
-**Not ready for use.** The plugin returns the Expo config unchanged.
-It does not validate options, render overlays or modify native icons.
-There is no published release from this scaffold.
+**Not ready for use.** Internal option validation and PNG rendering are implemented and tested.
+The plugin still returns the Expo config unchanged. Native integration starts in Stage 3.
+Prebuild does not apply overlays yet. There is no published release.
 
 ## Scope and support
 
@@ -42,9 +42,51 @@ bun run check:package
 ```
 
 `lint` and `format` write files. Their `:ci` and `:check` variants do not.
-`dev` watches the plugin build. `preview` reports that contact-sheet rendering is not implemented yet.
-Vitest permits an empty suite during scaffolding. Behavioral tests begin when the plugin has behavior.
+`dev` watches the plugin build. Tests use real rendering assets and reviewed PNG references.
 Do not add a unit test for the identity plugin.
+
+### Rendering review
+
+```sh
+bun run preview -- ../react-native-starter/assets/icons
+bun scripts/render-references.ts
+```
+
+The preview command expects `ios-light.png`, `ios-dark.png`, `ios-tinted.png`,
+`default.png` and `adaptive-icon.png` in the supplied directory.
+Open `preview/index.html` to inspect all seven icon variants with short and long text.
+Each sheet shows circle, squircle and rounded-square masks at full size and 60px.
+`preview/contact-sheet.png` gives a compact overview. All preview output stays ignored.
+
+The reference command writes ten candidates and a review sheet to `preview/references/`.
+Inspect every candidate before running `bun scripts/render-references.ts --accept`.
+That command replaces the committed references in `tests/references/`.
+`bun run test` compares exact pixels and writes failed comparisons to `preview/diffs/`.
+
+The approved strip height is 20% of the layout height. The minimum font size is 8%.
+Square and round layouts use the full icon size. Adaptive and monochrome layouts use the 66/108 safe circle.
+Round overlays retain the source alpha. Adaptive previews show the launcher's 72/108 viewport.
+Tinted icons use white strips and black text. Monochrome icons use white strips with transparent text cutouts.
+
+Text uses NFC normalization. Supported ranges are U+0020–U+007E and U+00A0–U+017F, except U+00AD.
+Text must contain a visible character. Only `{version}` is a token. Literal braces are not supported.
+Rendering escapes SVG characters and preserves letter case and spacing.
+Text shrinks to fit, without truncation. Text that cannot fit at the minimum size causes an error.
+
+### Font regeneration
+
+The committed font is an Inter v4.1 Bold subset with weight 700 and optical size 14.
+The script verifies the upstream font's SHA-256 before subsetting.
+Inter omits U+0149. The script composes this glyph from Inter's apostrophe and `n` glyphs.
+
+```sh
+python3 -m venv /tmp/icon-overlays-font-tools
+/tmp/icon-overlays-font-tools/bin/pip install fonttools==4.62.1
+/tmp/icon-overlays-font-tools/bin/python scripts/subset-font.py
+bun run test
+```
+
+Regeneration downloads the pinned upstream font and its license. Review both files before committing them.
 
 `check:fixtures` builds the plugin and prebuilds both native platforms without dependency installation.
 It does not compile an app or start a device. Generated native directories stay ignored.
@@ -89,4 +131,8 @@ Do not publish the scaffold. The implementation and first-release acceptance che
 
 ## License
 
-MIT. Font and WASM assets arrive with the renderer, not with this scaffold.
+Package code: MIT.
+
+The bundled [Inter](https://rsms.me/inter/) subset is by Rasmus Andersson and contributors.
+See [assets/Inter-LICENSE.txt](assets/Inter-LICENSE.txt) for the SIL Open Font License 1.1.
+The rasterizer dependency, `@resvg/resvg-wasm`, supplies its WASM asset under its own MIT license.
