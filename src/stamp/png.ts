@@ -2,6 +2,23 @@
 import { PNG } from "pngjs";
 
 const PNG_SIGNATURE = Buffer.from("89504e470d0a1a0a", "hex");
+const CHANNELS_PER_PIXEL = 4;
+const ALPHA_CHANNEL = 3;
+const MAXIMUM_CHANNEL = 255;
+const RGB_COLOR_TYPE = 2;
+
+function hasTransparentPixel(pixels: Buffer): boolean {
+  for (
+    let offset = ALPHA_CHANNEL;
+    offset < pixels.length;
+    offset += CHANNELS_PER_PIXEL
+  ) {
+    if (pixels.readUInt8(offset) !== MAXIMUM_CHANNEL) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export function decodePng(bytes: Uint8Array): PNG {
   const input = Buffer.from(bytes);
@@ -21,5 +38,8 @@ export function decodePng(bytes: Uint8Array): PNG {
 }
 
 export function encodePng(image: PNG): Buffer {
-  return PNG.sync.write(image);
+  // App Store Connect rejects large icons that have an alpha channel, even if every pixel is opaque.
+  return hasTransparentPixel(image.data)
+    ? PNG.sync.write(image)
+    : PNG.sync.write(image, { colorType: RGB_COLOR_TYPE });
 }

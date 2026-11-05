@@ -50,6 +50,7 @@ Tests compare exact pixels and write failed comparisons to `preview/diffs/`.
 - Adaptive previews show the launcher's 72/108 viewport.
 - Tinted icons use white strips and black text.
 - Monochrome icons use white strips with transparent text cutouts.
+- Fully opaque icons are written without an alpha channel, because App Store Connect rejects one on large icons.
 
 Rendering escapes SVG characters and preserves case and spacing.
 Text shrinks to fit without truncation.

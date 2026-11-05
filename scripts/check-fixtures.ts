@@ -309,6 +309,9 @@ function checkOverlayPixels(
     countPixels(after, strip) > countPixels(before, strip),
     `${path}: the strip color is absent`
   );
+  if (path.includes("App-Icon") && !path.includes("dark")) {
+    assert.equal(after.alpha, false, `${path}: iOS icon has an alpha channel`);
+  }
   if (path.includes("monochrome")) {
     assert.ok(
       countTransparentPixels(after) > countTransparentPixels(before),

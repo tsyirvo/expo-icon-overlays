@@ -61,6 +61,18 @@ describe("stampIcon", () => {
     expect(decoded.data.equals(PNG.sync.read(icon).data)).toBe(false);
   });
 
+  it.each([
+    { expected: false, name: "an opaque", source: createIcon() },
+    { expected: true, name: "a transparent", source: createIcon(0) },
+  ])(
+    "matches the alpha channel to the pixels of $name icon",
+    async ({ expected, source }) => {
+      // App Store Connect rejects large icons that have an alpha channel, even if unused.
+      const output = await stampIcon(source, overlays, "square");
+      expect(PNG.sync.read(output).alpha).toBe(expected);
+    }
+  );
+
   it.each(SURFACES)("rejects text that cannot fit on %s", async (surface) => {
     const long = parseOptions({
       overlays: [{ text: "W".repeat(100), type: "banner" }],
