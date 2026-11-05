@@ -6,6 +6,13 @@ on:
       ref:
         type: string
         required: true
+    outputs:
+      artifact-id:
+        description: Immutable ID of the tested package artifact
+        value: ${{ jobs.pack.outputs.artifact-id }}
+      sha256:
+        description: SHA-256 of the tested tarball
+        value: ${{ jobs.pack.outputs.sha256 }}
 
 permissions:
   contents: read
@@ -59,6 +66,9 @@ jobs:
 
   pack:
     runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      sha256: ${{ steps.digest.outputs.sha256 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -68,12 +78,21 @@ jobs:
         with:
           node-version: 24
       - run: bun install --frozen-lockfile
-      - run: bun run build && bun pm pack
+      - run: bun run build && bun pm pack --ignore-scripts --filename expo-icon-overlays-release.tgz
+      - name: Record package digest and contents
+        id: digest
+        run: |
+          tar -tzf expo-icon-overlays-release.tgz
+          SHA256=$(sha256sum expo-icon-overlays-release.tgz | cut -d ' ' -f 1)
+          printf 'sha256=%s\n' "$SHA256" >> "$GITHUB_OUTPUT"
+          printf 'Tarball SHA-256: %s\n' "$SHA256"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        id: upload
         with:
           name: release-package
-          path: expo-icon-overlays-*.tgz
+          path: expo-icon-overlays-release.tgz
           if-no-files-found: error
+          retention-days: 7
 
   packed-package:
     needs: pack
@@ -91,6 +110,12 @@ jobs:
           node-version: ${{ matrix.node }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: release-package
+          artifact-ids: ${{ needs.pack.outputs.artifact-id }}
           path: packed
-      - run: sh scripts/check-package.sh "$GITHUB_WORKSPACE"/packed/*.tgz
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Verify package digest
+        env:
+          PACKAGE_SHA256: ${{ needs.pack.outputs.sha256 }}
+        run: printf '%s  packed/expo-icon-overlays-release.tgz\n' "$PACKAGE_SHA256" | sha256sum --check --strict
+      - run: sh scripts/check-package.sh "$GITHUB_WORKSPACE/packed/expo-icon-overlays-release.tgz"

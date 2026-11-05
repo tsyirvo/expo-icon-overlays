@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       approved:
-        description: The owner approves npm publication of this release
+        description: The owner approves staging this release for separate npm 2FA approval
         required: true
         default: false
         type: boolean
@@ -22,8 +22,9 @@ concurrency:
 
 jobs:
   resolve:
-    if: inputs.approved && github.ref == 'refs/heads/main'
+    if: inputs.approved && github.ref == 'refs/heads/main' && github.repository == 'tsyirvo/expo-icon-overlays'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       sha: ${{ steps.release.outputs.sha }}
     steps:
@@ -62,6 +63,7 @@ jobs:
     needs: [ resolve, checks ]
     runs-on: ubuntu-latest
     environment: npm
+    timeout-minutes: 10
     permissions:
       contents: read
       id-token: write
@@ -69,9 +71,19 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
+      - name: Require a staging-compatible npm CLI
+        run: |
+          NPM_VERSION=$(npm --version)
+          node -e 'const [major, minor] = process.argv[1].split(".").map(Number); if (!(major > 11 || (major === 11 && minor >= 15))) { console.error("npm: staging requires CLI 11.15.0 or later. Update the reviewed Node toolchain."); process.exit(1); }' "$NPM_VERSION"
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: release-package
+          artifact-ids: ${{ needs.checks.outputs.artifact-id }}
           path: packed
-      - run: npm publish packed/*.tgz --provenance --access public
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Verify tested package digest
+        env:
+          PACKAGE_SHA256: ${{ needs.checks.outputs.sha256 }}
+        run: printf '%s  packed/expo-icon-overlays-release.tgz\n' "$PACKAGE_SHA256" | sha256sum --check --strict
+      - name: Stage for separate maintainer approval with npm 2FA
+        run: npm stage publish packed/expo-icon-overlays-release.tgz --provenance --access public --ignore-scripts --registry=https://registry.npmjs.org
