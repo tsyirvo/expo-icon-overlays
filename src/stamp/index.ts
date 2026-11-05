@@ -5,9 +5,7 @@ import { selectTextColor } from "./contrast";
 import { calculateLayout } from "./layout";
 import { decodePng, encodePng } from "./png";
 import { rasterizeSvg } from "./rasterize";
-import { createBanner } from "./shapes/banner";
-import { createRibbon } from "./shapes/ribbon";
-import { createSvg, createText } from "./svg";
+import { createStrip, createStripText, createSvg } from "./svg";
 import { fitText } from "./text-fit";
 
 export async function stampIcon(
@@ -29,11 +27,8 @@ export async function stampIcon(
     const color = hasFixedColors
       ? "#000000"
       : (overlay.color ?? selectTextColor(background));
-    const strip =
-      overlay.type === "banner"
-        ? createBanner(layout, background)
-        : createRibbon(layout, background);
-    const text = `<g transform="translate(${layout.centerX} ${layout.centerY}) rotate(${layout.angle})"><g transform="translate(${fitted.x} ${fitted.y})">${createText(overlay.text, fitted.fontSize, color)}</g></g>`;
+    const strip = createStrip(layout, background);
+    const text = createStripText(overlay.text, layout, fitted, color);
     if (isMonochrome) {
       blendPixels(
         image.data,
