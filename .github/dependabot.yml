@@ -1,6 +1,26 @@
 version: 2
 
 updates:
+  - package-ecosystem: bun
+    directories:
+      - "/"
+      - "/fixtures/expo-app"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    # A new Expo major needs a reviewed support change, and each SDK selects its React versions.
+    ignore:
+      - dependency-name: expo
+        update-types: [ version-update:semver-major ]
+      - dependency-name: react
+      - dependency-name: react-native
+    groups:
+      dependencies:
+        patterns: [ "*" ]
+    commit-message:
+      prefix: chore
+      include: scope
   - package-ecosystem: github-actions
     directories:
       - "/"

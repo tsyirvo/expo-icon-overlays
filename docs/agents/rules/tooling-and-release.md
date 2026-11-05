@@ -27,7 +27,7 @@ Keep job orchestration in reusable workflows under `.github/workflows/`.
 Use `.github/actions/` for composite actions that share steps inside jobs.
 The shared setup action installs selected mise tools before selecting the job's Node version.
 Keep dependency installation in the caller so packed-package jobs remain isolated from package dev dependencies.
-Update Dependabot's directory coverage when adding local actions.
+Update Dependabot's directory coverage when adding local actions or a Bun project.
 Run actionlint and ShellCheck through `bun run hooks:check` after workflow or script changes.
 Local static checks do not prove that GitHub Actions ran successfully.
 
