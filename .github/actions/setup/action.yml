@@ -1,0 +1,21 @@
+name: Set up toolchain
+description: Install selected mise tools, then select the job's Node version.
+
+inputs:
+  node-version:
+    description: Node version to use for this job
+    required: true
+  tools:
+    description: Tools from mise.toml to install
+    required: false
+    default: bun
+
+runs:
+  using: composite
+  steps:
+    - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+      with:
+        install_args: ${{ inputs.tools }}
+    - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      with:
+        node-version: ${{ inputs.node-version }}
