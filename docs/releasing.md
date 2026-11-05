@@ -21,8 +21,9 @@ Provenance links an artifact to a workflow and source commit. It does not detect
 
 ## Release checks and approval
 
-Release Please owns versions, changelogs and tags. The initial `release-as` is `0.1.0`.
-Remove `release-as` in a separate reviewed change after the first release, before preparing another version.
+Release Please owns versions, changelogs and tags. A `Release-As: 0.1.0` commit footer on `main` sets the first version.
+The footer applies only to that release, so it needs no cleanup. Do not use `release-as` in the config, because it repeats the version until removed.
+To force another version, add a `Release-As: x.y.z` footer to a commit on `main`.
 The local preparation manifest stays at `0.0.0`. The workflow rejects that version.
 
 1. Review the release PR, dependency changes, lockfiles and workflow changes.
