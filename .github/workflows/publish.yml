@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   resolve:
-    if: inputs.approved && github.ref == 'refs/heads/main' && github.repository == 'tsyirvo/expo-icon-overlays'
+    if: inputs.approved && startsWith(github.ref, 'refs/tags/v') && github.repository == 'tsyirvo/expo-icon-overlays'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -44,9 +44,14 @@ jobs:
             echo '::error::tag must use vX.Y.Z. Select an approved release tag.'
             exit 1
           fi
+          # Run from the tag so provenance names the commit that built the tarball, even after main moves.
+          if [ "$GITHUB_REF" != "refs/tags/$RELEASE_TAG" ]; then
+            echo '::error::tag does not match the selected ref. Dispatch from the approved release tag.'
+            exit 1
+          fi
           SHA=$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")
-          if [ "$SHA" != "$GITHUB_SHA" ]; then
-            echo '::error::tag does not match the selected main commit. Dispatch from the release commit.'
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo '::error::tag is not on main. Select a tag that Release Please created on main.'
             exit 1
           fi
           git checkout --detach "$SHA"

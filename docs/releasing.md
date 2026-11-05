@@ -14,6 +14,9 @@ It does not check out source, install package dependencies or run package lifecy
 The workflow can only stage a package when npm restricts this publisher to stage-only access.
 A maintainer then reviews the package and approves it with npm 2FA.
 A workflow checkbox is not an authorization control. Environment protection and npm permissions provide the controls.
+The workflow runs from the release tag, so provenance names the commit that built the tarball.
+The `npm` environment must allow `v*` tags as deployment refs and must keep its required reviewers.
+A tag ruleset must restrict who can create or move `v*` tags, because a run uses the workflow file stored in its tag.
 Provenance links an artifact to a workflow and source commit. It does not detect malicious source or dependencies.
 
 ## Release checks and approval
@@ -23,8 +26,9 @@ Remove `release-as` in a separate reviewed change after the first release, befor
 The local preparation manifest stays at `0.0.0`. The workflow rejects that version.
 
 1. Review the release PR, dependency changes, lockfiles and workflow changes.
-2. Check the tag, package version and selected `main` commit. They must match.
-3. Dispatch `Publish` from that commit with the approved tag and staging approval input.
+2. Check that the tag's commit is on `main` and that the tag matches the package version. Later commits on `main` do not block a release.
+3. Dispatch `Publish` from the tag, not from `main`, with the same approved tag and the staging approval input:
+   `gh workflow run publish.yml --ref v0.1.0 -f tag=v0.1.0 -f approved=true`.
 4. Require successful quality checks, source fixtures and isolated tarball checks on Node 24 and Node 26.
 5. Before environment approval, inspect the tarball listing and SHA-256 from the pack job.
    Expect only `build/`, `app.plugin.js`, font assets, licenses, README and `package.json`.
