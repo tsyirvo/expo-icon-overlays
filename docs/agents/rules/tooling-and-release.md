@@ -33,8 +33,9 @@ Local static checks do not prove that GitHub Actions ran successfully.
 
 CI must check Node 24 and Node 26. The first release supports only Expo SDK 58.
 Widen support only after version-matched fixtures and final-asset checks pass.
-Minimum/latest SDK fixtures and final-image checks belong to the native implementation phase.
-The scaffold's single SDK fixture does not establish full supported-range compatibility.
+Keep minimum/latest SDK fixtures and final-image checks in the release gates.
+Run weekly dist-tag probes against unpublished candidates only. Treat their failures as compatibility alerts,
+not evidence that a new SDK is supported.
 
 ## Releases
 

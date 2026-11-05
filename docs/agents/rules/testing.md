@@ -33,13 +33,10 @@ Reject these tests:
 ## Commands and verification boundaries
 
 Use `bun run test` to invoke Vitest. Never use `bun test`.
-The scaffold deliberately has no unit tests. Do not add tests for the identity plugin.
-Remove `--passWithNoTests` when the first behavioral tests arrive.
-
-Use `bun run check:fixtures` for source-plugin prebuilds on iOS and Android.
-Use `bun run check:package` for isolated tarball installation, public-entry resolution,
-config loading and both platform prebuilds. These checks need no Doppler values or secrets.
-They do not prove final overlay pixels, native compilation or device behavior.
+Use `bun run check:fixtures` for source-plugin final-asset checks after full iOS and Android prebuilds.
+Use `bun run check:package` for the same checks after isolated tarball installation and public-entry resolution.
+Use `bun run check:sdk -- <version-or-range>` for supported-SDK compatibility checks.
+These checks need no Doppler values or secrets. They do not prove native compilation or device behavior.
 
 Before changing fixture dependencies or packed-package checks, also read
 [Tooling and release](tooling-and-release.md). Use unmodified dependencies.

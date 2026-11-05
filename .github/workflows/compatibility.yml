@@ -1,0 +1,36 @@
+name: Compatibility alerts
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe Expo ${{ matrix.expo }} / Node ${{ matrix.node }} (not a support claim)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [ 24, 26 ]
+        expo: [ latest, next, canary ]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ matrix.node }}
+      - run: bun install --frozen-lockfile
+      - name: Check unpublished candidate with unmodified dependencies
+        run: bun run check:sdk -- "$EXPO_SPEC"
+        env:
+          CI: "1"
+          ICON_OVERLAYS_CANDIDATE: "1"
+          EXPO_SPEC: ${{ matrix.expo }}
+      - name: Report compatibility alert
+        if: failure()
+        run: echo '::warning::Expo compatibility probe failed. This is an alert, not a change to released SDK support.'

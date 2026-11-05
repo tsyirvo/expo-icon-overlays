@@ -39,4 +39,3 @@ Enforce module import boundaries with Biome `noRestrictedImports`.
 7. Read, stamp and write each target through `native`.
 
 Read version-matched official documentation or installed source before using Expo APIs.
-The current scaffold returns the config unchanged. Do not treat the planned flow as implemented behavior.

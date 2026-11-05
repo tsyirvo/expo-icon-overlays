@@ -3,7 +3,12 @@ module.exports = {
   android: { package: "dev.tsyirvo.iconoverlays.fixture" },
   ios: { bundleIdentifier: "dev.tsyirvo.iconoverlays.fixture" },
   name: "IconOverlaysFixture",
-  plugins: [process.env.ICON_OVERLAYS_PLUGIN ?? "../../app.plugin.js"],
+  plugins: [
+    [
+      process.env.ICON_OVERLAYS_PLUGIN ?? "../../app.plugin.js",
+      { overlays: [{ text: "DEV", type: "banner" }] },
+    ],
+  ],
   slug: "icon-overlays-fixture",
   version: "1.0.0",
 };

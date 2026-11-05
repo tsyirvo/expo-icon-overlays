@@ -2,20 +2,26 @@
 
 Text overlays on Expo app icons, under development.
 
-**Not ready for use.** Internal option validation and PNG rendering are implemented and tested.
-The plugin still returns the Expo config unchanged. Native integration starts in Stage 3.
-Prebuild does not apply overlays yet. There is no published release.
+**Not published yet.** The plugin validates options and stamps Expo-generated native icons during prebuild.
+Native integration and final-asset fixtures are implemented. Starter integration and release acceptance remain incomplete.
 
 ## Scope and support
 
-The planned first release targets Expo SDK 58 (`expo ^58.0.0`) and Node 24 or later.
-Node 22 is not supported. CI checks Node 24 and Node 26 with Expo `58.0.22`.
-Minimum/latest SDK fixtures and final-image checks arrive with the native implementation.
-The fixture has no custom icon yet. It needs no Doppler values or secrets.
+The first release targets Expo SDK 58 (`expo ^58.0.0`) and Node 24 or later.
+Node 22 is not supported. CI checks Node 24 and Node 26 against the minimum and latest stable SDK 58 versions.
+Fixtures need no Doppler values or secrets. They use unmodified dependencies and let Expo select its image generator.
+Active-Sharp checks remain deferred until an official Expo release fixes its loader.
 
-The plugin will run during prebuild. Icon changes need prebuild and a new native build.
+The plugin runs during prebuild. Icon changes need prebuild and a new native build.
 OTA updates cannot change icons. Installed variants need distinct application identifiers.
-The plugin will not set those identifiers.
+The plugin does not set those identifiers.
+
+PNG coverage includes iOS single/light, dark and tinted icons, plus Android legacy, round, adaptive foreground and monochrome icons.
+The plugin leaves Android backgrounds, the web favicon and source icons unchanged.
+iOS `.icon` folders are not supported in the first release. Prebuild warns that no iOS overlays were applied.
+The plugin leaves both source and copied `.icon` folders unchanged and reports no iOS success count.
+Run prebuild before rebuilding an existing native project, including after changing text or disabling overlays.
+Duplicate active entries and unsupported consumer Expo versions fail when the config loads.
 
 ## Development
 
@@ -43,7 +49,7 @@ bun run check:package
 
 `lint` and `format` write files. Their `:ci` and `:check` variants do not.
 `dev` watches the plugin build. Tests use real rendering assets and reviewed PNG references.
-Do not add a unit test for the identity plugin.
+Config-loading tests check plugin errors and inactive entries without mocking package modules.
 
 ### Rendering review
 
@@ -88,12 +94,28 @@ bun run test
 
 Regeneration downloads the pinned upstream font and its license. Review both files before committing them.
 
-`check:fixtures` builds the plugin and prebuilds both native platforms without dependency installation.
-It does not compile an app or start a device. Generated native directories stay ignored.
-The Expo CLI may download its public native template on the first run.
+`check:fixtures` builds the plugin, installs locked fixture dependencies and runs full CLI prebuilds in temporary apps.
+It checks final overlay pixels, dimensions, untouched assets, applied counts, `.icon` warnings, duplicate rejection,
+missing/non-PNG files, version tokens and fingerprints. It also checks repeated prebuilds, replacement text and disabled overlays.
+Each icon setup uses fresh and existing native projects. The script retains temporary apps and prints their location.
+These checks do not compile an app or start a device. Expo may download its public native template.
+
+```sh
+bun run check:sdk -- 58.0.0
+bun run check:sdk -- '^58.0.0'
+ICON_OVERLAYS_CANDIDATE=1 bun run check:sdk -- canary
+```
+
+`check:sdk` resolves an exact consumer version and runs the same final-asset checks in temporary apps.
+The owner approved exact cooldown exceptions for Expo 58.0.23 and its required Expo dependencies in these apps only.
+Repository dependencies and the three-day cooldown stay unchanged.
+Weekly `latest`, `next` and `canary` probes widen the peer range only in temporary, unpublished candidate packages.
+Probe failures are compatibility alerts. They do not change released support and do not gate publication.
+The fingerprint check uses Expo's default balanced preset with `runtimeVersion: { policy: 'appVersion' }`.
+A `{version}` overlay preserves the fingerprint for a version-only change. Literal version text changes it.
 
 `check:package` packs the build and installs it into a temporary app outside this repository.
-It checks CommonJS and Expo plugin resolution, config loading and both platform prebuilds.
+It checks CommonJS and Expo plugin resolution, config loading and the same full final-asset suite.
 It uses the fixture's locked dependencies, not package dev dependencies or links.
 The script retains temporary files and prints their location for inspection.
 Pass an existing tarball to `sh scripts/check-package.sh /absolute/path/package.tgz`
