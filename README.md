@@ -61,7 +61,9 @@ Do not use `prebuild --clean` unless you intend to regenerate the native project
 
 Overlays draw in array order. Each position must be unique.
 A top banner cannot share an array with a ribbon.
-Text shrinks to fit without truncation. Invalid options cause errors, even when overlays are disabled.
+Text shrinks to fit without truncation. Text that cannot fit causes a prebuild error.
+Keep text to about 7 capital letters. See [text length](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md#text-length) for the limits.
+Invalid options cause errors, even when overlays are disabled.
 
 ## Scope and limits
 

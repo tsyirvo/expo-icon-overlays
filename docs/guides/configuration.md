@@ -71,8 +71,30 @@ The plugin rejects:
 - Literal or malformed braces.
 
 `DEV & QA` and `<DEV>` render literally.
+
+## Text length
+
 Text shrinks to fit without truncation.
 Text that cannot fit at the minimum size causes a prebuild error.
+The longest text width depends on the overlay and icon type. Widths are multiples of the font size:
+
+| Overlay | Square and tinted icons | Round, adaptive and monochrome icons |
+| ------- | ----------------------- | ------------------------------------ |
+| Banner  | 5.5                     | 4.75                                 |
+| Ribbon  | 6.5                     | 5                                    |
+
+Android always generates an adaptive foreground, so Android builds use the narrower limits.
+Keep text to about 7 capital letters to fit every icon type:
+
+| Text                                          | Result                                           |
+| --------------------------------------------- | ------------------------------------------------ |
+| `STAGING`, `PREVIEW`, `10.12.3`, `1.2.3-rc.1` | Fits every icon type.                            |
+| `INTERNAL`                                    | Fails on round, adaptive and monochrome banners. |
+| `1.2.3-beta.4`                                | Fits only ribbons on square and tinted icons.    |
+| `DEVELOPMENT`, `PRODUCTION`                   | Fails on every icon type.                        |
+
+The length of `{version}` text can change with each release.
+A longer version can make a later prebuild fail, so test prerelease version formats before relying on them.
 
 ## Platform behavior
 

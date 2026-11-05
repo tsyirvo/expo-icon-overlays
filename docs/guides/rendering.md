@@ -54,7 +54,8 @@ Tests compare exact pixels and write failed comparisons to `preview/diffs/`.
 Rendering escapes SVG characters and preserves case and spacing.
 Text shrinks to fit without truncation.
 Text that cannot fit at the minimum size causes an error.
-See [supported text](configuration.md#supported-text) for character ranges and token rules.
+See [supported text](configuration.md#supported-text) for character ranges and token rules,
+and [text length](configuration.md#text-length) for the fit limits.
 
 ## Regenerate the font
 
