@@ -162,6 +162,12 @@ describe("resolveTokens", () => {
     expect(overlays[0]?.text).toBe("v{version} / {version}");
   });
 
+  it("inserts replacement patterns in config.version as literal text", () => {
+    expect(resolveTokens(overlays, { version: "1.0$&" })[0]?.text).toBe(
+      "v1.0$& / 1.0$&"
+    );
+  });
+
   it.each([undefined, ...INVALID_TEXT, "{version}"])(
     "rejects invalid config.version %j",
     (version) => {

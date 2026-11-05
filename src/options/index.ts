@@ -148,7 +148,7 @@ export function resolveTokens(
     const field = `overlays[${index}].text (config.version)`;
     const version = validateText(context.version, field);
     const text = validateText(
-      overlay.text.replaceAll(VERSION_TOKEN, version),
+      overlay.text.replaceAll(VERSION_TOKEN, () => version),
       field
     );
     if (BRACES.test(text)) {
