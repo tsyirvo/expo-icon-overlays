@@ -92,6 +92,44 @@ describe("stampIcon", () => {
     }
   });
 
+  it.each<[Surface, number]>([
+    ["square", MAXIMUM_CHANNEL],
+    ["round", 128],
+    ["adaptive-foreground", 0],
+  ])(
+    "keeps antialiased strip edges free of dark fringes on %s with source alpha %i",
+    async (surface, alpha) => {
+      const icon = new PNG({ height: ICON_SIZE_PX, width: ICON_SIZE_PX });
+      for (
+        let offset = 0;
+        offset < icon.data.length;
+        offset += CHANNELS_PER_PIXEL
+      ) {
+        icon.data.set(
+          [MAXIMUM_CHANNEL, MAXIMUM_CHANNEL, MAXIMUM_CHANNEL, alpha],
+          offset
+        );
+      }
+      const white = parseOptions({
+        overlays: [
+          { background: "#FFF", color: "#FFF", text: "DEV", type: "ribbon" },
+        ],
+      });
+      const output = PNG.sync.read(
+        await stampIcon(PNG.sync.write(icon), white.overlays, surface)
+      );
+      for (
+        let offset = 0;
+        offset < output.data.length;
+        offset += CHANNELS_PER_PIXEL
+      ) {
+        if (output.data[offset + ALPHA_CHANNEL] !== 0) {
+          expect(output.data[offset]).toBe(MAXIMUM_CHANNEL);
+        }
+      }
+    }
+  );
+
   it("adds foreground pixels outside the existing alpha and cuts monochrome text through an opaque source", async () => {
     const transparent = createIcon(0);
     const adaptive = PNG.sync.read(

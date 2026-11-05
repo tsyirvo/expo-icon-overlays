@@ -1,4 +1,4 @@
-// Composes straight-alpha overlay pixels using the surface's blend operation.
+// Composes premultiplied resvg overlay pixels using the surface's blend operation.
 const CHANNELS_PER_PIXEL = 4;
 const ALPHA_CHANNEL = 3;
 const MAXIMUM_CHANNEL = 255;
@@ -32,8 +32,7 @@ export function blendPixels(
       blend === "atop"
         ? destinationAlpha
         : sourceAlpha + destinationAlpha * (1 - sourceAlpha);
-    const sourceWeight =
-      blend === "atop" ? sourceAlpha * destinationAlpha : sourceAlpha;
+    const sourceWeight = blend === "atop" ? destinationAlpha : 1;
     for (let channel = 0; channel < ALPHA_CHANNEL; channel += 1) {
       const sourceColor = source.readUInt8(offset + channel);
       const destinationColor = destination.readUInt8(offset + channel);
