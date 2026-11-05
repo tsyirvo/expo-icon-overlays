@@ -65,7 +65,8 @@ bun run check:sdk -- '^58.0.0'
 ICON_OVERLAYS_CANDIDATE=1 bun run check:sdk -- canary
 ```
 
-`check:sdk` installs the requested Expo version and runs the same final-asset checks in temporary apps.
+`check:sdk` installs the requested Expo version and the packed plugin, then runs the same final-asset checks in temporary apps.
+The plugin therefore loads the requested Expo, and the check fails if it resolves another copy.
 The temporary apps have no lockfile and keep the three-day cooldown.
 A range or dist-tag therefore selects the newest version older than three days, so a new Expo patch does not block CI.
 Fixtures use unmodified dependencies and let Expo select its image generator.

@@ -34,5 +34,18 @@ NODE
 fi
 cd "$PLUGIN_ROOT"
 bun run build
+bun pm pack --destination "$CHECK_ROOT"
+
+# Install the tarball so the plugin loads the requested Expo instead of the repository's copy.
+cd "$CHECK_ROOT/app"
+bun add "$CHECK_ROOT"/expo-icon-overlays-*.tgz
+export EXPO_VERSION
+node <<'NODE'
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const manifest = require.resolve('expo/package.json', { paths: [path.dirname(require.resolve('expo-icon-overlays'))] });
+assert.equal(require(manifest).version, process.env.EXPO_VERSION, 'scripts/check-sdk.sh: the plugin loads a different Expo. Install the plugin into the checked app.');
+NODE
+
 cd "$PACKAGE_ROOT"
-ICON_OVERLAYS_FIXTURE_ROOT="$CHECK_ROOT/app" ICON_OVERLAYS_PLUGIN="$PLUGIN_ROOT/app.plugin.js" bun scripts/check-fixtures.ts
+ICON_OVERLAYS_FIXTURE_ROOT="$CHECK_ROOT/app" ICON_OVERLAYS_PLUGIN=expo-icon-overlays bun scripts/check-fixtures.ts
