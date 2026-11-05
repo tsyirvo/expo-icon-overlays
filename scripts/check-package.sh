@@ -27,7 +27,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { realpathSync } = require('node:fs');
 const manifest = require('expo-icon-overlays/package.json');
-const plugin = require('expo-icon-overlays');
+const plugin = require('expo-icon-overlays').default;
 const pluginEntry = require('expo-icon-overlays/app.plugin.js');
 assert.equal(typeof plugin, 'function', 'package.json: the packed entry is not callable. Correct the CommonJS build and exports.');
 assert.equal(pluginEntry, plugin, 'app.plugin.js: Expo and Node resolve different plugins. Load the public build entry.');

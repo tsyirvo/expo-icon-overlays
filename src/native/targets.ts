@@ -26,7 +26,8 @@ export async function updateIconTargets(
   overlays: Overlay[]
 ): Promise<void> {
   const { stampIcon } = await import("../stamp/index");
-  // Prepare every image before writing so an invalid target cannot leave a partly stamped platform.
+  // Render every image before writing so a rendering failure leaves all icons untouched.
+  // A failed write can still leave some icons stamped, and the next prebuild regenerates them.
   const updates = await Promise.all(
     targets.map(async (target) => {
       const bytes = await readIcon(target.path);

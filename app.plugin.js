@@ -1,3 +1,3 @@
 "use strict";
 // Lets Expo load the compiled CommonJS plugin without a TypeScript loader.
-module.exports = require("./build/index.js");
+module.exports = require("./build/index.js").default;

@@ -12,15 +12,30 @@ import { updateIconTargets } from "./targets";
 
 const REGISTRATION = Symbol.for("expo-icon-overlays.registration");
 
-function checkExpoVersion(config: ExportedConfig): void {
+function readConsumerExpoManifest(config: ExportedConfig): unknown {
   const projectRoot: unknown = config._internal?.projectRoot;
-  const requireConsumer = createRequire(
-    resolve(
-      typeof projectRoot === "string" ? projectRoot : process.cwd(),
-      "package.json"
-    )
-  );
-  const manifest: unknown = requireConsumer("expo/package.json");
+  const consumerRoot =
+    typeof projectRoot === "string" ? projectRoot : process.cwd();
+  const requireConsumer = createRequire(resolve(consumerRoot, "package.json"));
+  try {
+    return requireConsumer("expo/package.json");
+  } catch (cause) {
+    if (
+      cause instanceof Error &&
+      "code" in cause &&
+      cause.code === "MODULE_NOT_FOUND"
+    ) {
+      throw new Error(
+        `expo cannot be resolved from ${consumerRoot}. Install expo in the supported range ${peerDependencies.expo}.`,
+        { cause }
+      );
+    }
+    throw cause;
+  }
+}
+
+function checkExpoVersion(config: ExportedConfig): void {
+  const manifest = readConsumerExpoManifest(config);
   const version =
     typeof manifest === "object" && manifest !== null && "version" in manifest
       ? manifest.version

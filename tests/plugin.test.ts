@@ -30,6 +30,16 @@ describe("plugin config loading", () => {
     }
   );
 
+  it("rejects a project without expo and names the supported range", async () => {
+    const root = await mkdtemp(join(tmpdir(), "icon-overlays-no-expo-"));
+    const config = {
+      _internal: { projectRoot: root },
+      name: "Fixture",
+      slug: "fixture",
+    };
+    expect(() => withIconOverlays(config, ACTIVE)).toThrow(EXPO_RANGE_ERROR);
+  });
+
   it.each([{ enabled: false, ...ACTIVE }, { overlays: [] }])(
     "leaves inactive configurations unchanged even with unsupported Expo",
     async (options) => {

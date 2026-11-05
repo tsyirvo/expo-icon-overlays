@@ -2,6 +2,8 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
+  // Keep a real default export so the runtime matches the declarations, which also export types.
+  cjsDefault: false,
   clean: true,
   dts: true,
   entry: ["src/index.ts"],
