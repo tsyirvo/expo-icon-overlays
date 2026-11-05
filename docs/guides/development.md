@@ -1,0 +1,91 @@
+# Development
+
+Read [AGENTS.md](../../AGENTS.md) before changing code.
+Run the commands below from the repository root.
+Use Bun for installation and scripts.
+
+## Setup
+
+```sh
+mise trust
+mise install
+bun install --frozen-lockfile
+bun run hooks:install
+bun run build
+```
+
+`bun run dev` watches the plugin build.
+`bun run test` invokes Vitest, not Bun's test runner.
+
+## Required checks
+
+```sh
+bun run lint:ts
+bun run lint:ci
+bun run format:check
+bun run test
+bun run knip
+bun run hooks:check
+bun run check:fixtures
+bun run check:package
+```
+
+`lint` and `format` write files. Their `:ci` and `:check` variants do not.
+Tests use real rendering assets and reviewed PNG references.
+Config-loading tests check plugin errors and inactive entries without mocking package modules.
+See [rendering](rendering.md) for previews and reference approval.
+
+## Fixture checks
+
+`check:fixtures` builds the plugin and installs locked fixture dependencies.
+It runs full CLI prebuilds in temporary apps and checks:
+
+- Final overlay pixels, dimensions, unchanged assets and applied counts.
+- `.icon` warnings, duplicate rejection and missing or non-PNG files.
+- Version tokens and native fingerprints.
+- Repeated prebuilds, replacement text and disabled overlays.
+
+Each icon setup uses fresh and existing native projects.
+The script retains temporary apps and prints their location.
+Fixtures need no Doppler values or secrets. Expo may download its public native template.
+These checks do not compile an app or start a device.
+
+## SDK checks and support policy
+
+The first release supports only Expo SDK 58 and Node 24 or later.
+Node 22 is not supported.
+CI checks Node 24 and Node 26 against the minimum and latest stable SDK 58 versions.
+
+Support includes only tested SDK majors. The target is the latest three SDK majors, not an untested compatibility promise.
+Removing the oldest supported SDK requires a major package release.
+
+```sh
+bun run check:sdk -- 58.0.0
+bun run check:sdk -- '^58.0.0'
+ICON_OVERLAYS_CANDIDATE=1 bun run check:sdk -- canary
+```
+
+`check:sdk` resolves an exact consumer version and runs the same final-asset checks in temporary apps.
+The owner approved exact cooldown exceptions for Expo 58.0.23 and its required Expo dependencies in these apps only.
+Repository dependencies and the three-day cooldown stay unchanged.
+Fixtures use unmodified dependencies and let Expo select its image generator.
+Active-Sharp checks remain deferred until an official Expo release fixes its loader.
+
+Weekly `latest`, `next` and `canary` probes widen the peer range only in temporary, unpublished candidate packages.
+Probe failures are compatibility alerts. They do not change released support and do not gate publication.
+See [build caching](build-caching.md) for the fingerprint checks and their limits.
+
+## Packed-package checks
+
+`check:package` packs the build and installs it into a temporary app outside this repository.
+It checks CommonJS and Expo plugin resolution, config loading and the same final-asset suite.
+It uses the fixture's locked dependencies, not package dev dependencies or links.
+The script retains temporary files and prints their location.
+
+To check an existing tarball without rebuilding it, run:
+
+```sh
+sh scripts/check-package.sh /absolute/path/package.tgz
+```
+
+Maintainers: see the [release procedure](../releasing.md) for publication controls and approval steps.
