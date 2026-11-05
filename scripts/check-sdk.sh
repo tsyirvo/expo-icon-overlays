@@ -7,35 +7,11 @@ CHECK_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/icon-overlays-sdk.XXXXXX")
 EXPO_SPEC=${1:?Supply an Expo version, range or dist-tag.}
 printf 'SDK check directory: %s\n' "$CHECK_ROOT"
 mkdir "$CHECK_ROOT/app"
-cp "$PACKAGE_ROOT/fixtures/expo-app/package.json" "$PACKAGE_ROOT/fixtures/expo-app/bun.lock" "$PACKAGE_ROOT/fixtures/expo-app/bunfig.toml" "$CHECK_ROOT/app/"
+# Omit the lockfile so Bun selects the newest requested version that the fixture cooldown allows.
+cp "$PACKAGE_ROOT/fixtures/expo-app/package.json" "$PACKAGE_ROOT/fixtures/expo-app/bunfig.toml" "$CHECK_ROOT/app/"
 cd "$CHECK_ROOT/app"
-bun install --frozen-lockfile
-# Resolve the newest match explicitly: Bun can otherwise reuse the older locked version.
-EXPO_VERSION=$(bun pm view "expo@$EXPO_SPEC" version)
-# The owner approved these exact SDK 58.0.23 exceptions for temporary fixtures only.
-cat >> bunfig.toml <<'TOML'
-minimumReleaseAgeExcludes = [
-  "expo@58.0.23",
-  "@expo/cli@58.1.19",
-  "@expo/config@58.0.11",
-  "@expo/config-plugins@58.0.12",
-  "@expo/fingerprint@0.21.9",
-  "@expo/env@2.5.4",
-  "@expo/inline-modules@0.2.9",
-  "@expo/local-build-cache-provider@58.0.11",
-  "@expo/log-box@58.0.15",
-  "@expo/metro-config@58.0.21",
-  "@expo/prebuild-config@58.0.19",
-  "@expo/router-server@58.0.21",
-  "babel-preset-expo@58.0.24",
-  "expo-asset@58.0.20",
-  "expo-constants@58.0.15",
-  "expo-modules-autolinking@58.0.17",
-  "expo-modules-core@58.0.30",
-  "expo-modules-jsi@58.0.22",
-]
-TOML
-bun add --exact "expo@$EXPO_VERSION"
+bun add "expo@$EXPO_SPEC"
+EXPO_VERSION=$(node -p "require('./node_modules/expo/package.json').version")
 printf 'Checking unmodified Expo %s on Node %s\n' "$EXPO_VERSION" "$(node --version)"
 
 PLUGIN_ROOT=$PACKAGE_ROOT

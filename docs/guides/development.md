@@ -54,7 +54,7 @@ These checks do not compile an app or start a device.
 
 The first release supports only Expo SDK 58 and Node 24 or later.
 Node 22 is not supported.
-CI checks Node 24 and Node 26 against the minimum and latest stable SDK 58 versions.
+CI checks Node 24 and Node 26 against the minimum SDK 58 version and the newest one outside the cooldown.
 
 Support includes only tested SDK majors. The target is the latest three SDK majors, not an untested compatibility promise.
 Removing the oldest supported SDK requires a major package release.
@@ -65,9 +65,9 @@ bun run check:sdk -- '^58.0.0'
 ICON_OVERLAYS_CANDIDATE=1 bun run check:sdk -- canary
 ```
 
-`check:sdk` resolves an exact consumer version and runs the same final-asset checks in temporary apps.
-The owner approved exact cooldown exceptions for Expo 58.0.23 and its required Expo dependencies in these apps only.
-Repository dependencies and the three-day cooldown stay unchanged.
+`check:sdk` installs the requested Expo version and runs the same final-asset checks in temporary apps.
+The temporary apps have no lockfile and keep the three-day cooldown.
+A range or dist-tag therefore selects the newest version older than three days, so a new Expo patch does not block CI.
 Fixtures use unmodified dependencies and let Expo select its image generator.
 Active-Sharp checks remain deferred until an official Expo release fixes its loader.
 
