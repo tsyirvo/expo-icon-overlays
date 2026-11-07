@@ -31,7 +31,7 @@ Update Dependabot's directory coverage when adding local actions or a Bun projec
 Run actionlint and ShellCheck through `bun run hooks:check` after workflow or script changes.
 Local static checks do not prove that GitHub Actions ran successfully.
 
-CI must check Node 24 and Node 26. The first release supports only Expo SDK 58.
+CI must check Node 22, Node 24 and Node 26. The first release supports only Expo SDK 58.
 Widen support only after version-matched fixtures and final-asset checks pass.
 Keep minimum/latest SDK fixtures and final-image checks in the release gates.
 Run weekly dist-tag probes against unpublished candidates only. Treat their failures as compatibility alerts,
@@ -47,7 +47,7 @@ Publication must require owner approval and all these checks:
 
 - Quality checks on the release commit.
 - Supported-SDK fixtures.
-- Isolated packed-package checks on Node 24 and Node 26.
+- Isolated packed-package checks on Node 22, Node 24 and Node 26, including the minimum supported Node version.
 
 Publish the same tarball that passed the checks. Do not rebuild it in the publishing job.
 Keep publication manual and retain the protected `npm` environment.

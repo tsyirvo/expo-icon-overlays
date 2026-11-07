@@ -14,7 +14,9 @@ This is a community package, not an official Expo package.
 
 ## Requirements
 
-Expo SDK 58 (`expo ^58.0.0`) and Node 24 or later. Node 22 is not supported.
+Expo SDK 58 (`expo ^58.0.0`) and a Node version in Expo's supported range:
+`^22.13.0 || ^24.3.0 || ^26.0.0 || >=27.0.0`.
+Node 22 support starts at `22.13.0`.
 
 ## Install and configure
 

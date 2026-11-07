@@ -52,9 +52,12 @@ These checks do not compile an app or start a device.
 
 ## SDK checks and support policy
 
-The first release supports only Expo SDK 58 and Node 24 or later.
-Node 22 is not supported.
-CI checks Node 24 and Node 26 against the minimum SDK 58 version and the newest one outside the cooldown.
+The first release supports only Expo SDK 58. The [README](../../README.md#requirements) lists the supported Node versions.
+CI checks Node 22, Node 24 and Node 26 against the minimum SDK 58 version and the newest one outside the cooldown.
+Isolated tarball checks also run on Node `22.13.0`, the minimum supported version.
+Development checks use the latest patch of each tested Node major.
+Building from source requires Node 22.18.0 or later within Node 22 because `tsdown` requires it.
+Consumers use the compiled package and do not need `tsdown`.
 
 Support includes only tested SDK majors. The target is the latest three SDK majors, not an untested compatibility promise.
 Removing the oldest supported SDK requires a major package release.

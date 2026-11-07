@@ -5,7 +5,7 @@ The repository is `tsyirvo/expo-icon-overlays`. The release workflow is `.github
 
 ## Security model
 
-GitHub Actions builds one tarball without npm credentials. Separate jobs test that artifact on Node 24 and Node 26.
+GitHub Actions builds one tarball without npm credentials. Separate jobs test that artifact on Node 22, Node 24 and Node 26, including Node `22.13.0`.
 Only the final job can request an npm OIDC identity. OIDC supplies short-lived credentials for the configured publisher.
 The job runs on a fresh GitHub-hosted runner after approval of the protected `npm` environment.
 It downloads the immutable artifact by ID and checks its SHA-256 against the build job output.
@@ -30,7 +30,8 @@ The local preparation manifest stays at `0.0.0`. The workflow rejects that versi
 2. Check that the tag's commit is on `main` and that the tag matches the package version. Later commits on `main` do not block a release.
 3. Dispatch `Publish` from the tag, not from `main`, with the same approved tag and the staging approval input:
    `gh workflow run publish.yml --ref v0.1.0 -f tag=v0.1.0 -f approved=true`.
-4. Require successful quality checks, source fixtures and isolated tarball checks on Node 24 and Node 26.
+4. Require successful quality checks, source fixtures and isolated tarball checks on Node 22, Node 24 and Node 26.
+   Require isolated tarball checks on Node `22.13.0` as well.
 5. Before environment approval, inspect the tarball listing and SHA-256 from the pack job.
    Expect only `build/`, `app.plugin.js`, font assets, licenses, README and `package.json`.
    Reject credentials, extra executables, unexpected lifecycle scripts or unexplained dependency changes.

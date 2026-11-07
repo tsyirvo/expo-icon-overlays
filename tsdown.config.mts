@@ -11,5 +11,5 @@ export default defineConfig({
   outDir: "build",
   outExtensions: () => ({ dts: ".d.ts", js: ".js" }),
   platform: "node",
-  target: "node24",
+  target: "node22",
 });
