@@ -91,4 +91,4 @@ jobs:
           PACKAGE_SHA256: ${{ needs.checks.outputs.sha256 }}
         run: printf '%s  packed/expo-icon-overlays-release.tgz\n' "$PACKAGE_SHA256" | sha256sum --check --strict
       - name: Stage for separate maintainer approval with npm 2FA
-        run: npm stage publish packed/expo-icon-overlays-release.tgz --provenance --access public --ignore-scripts --registry=https://registry.npmjs.org
+        run: npm stage publish ./packed/expo-icon-overlays-release.tgz --provenance --access public --ignore-scripts --registry=https://registry.npmjs.org
