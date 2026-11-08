@@ -1,6 +1,6 @@
 {
   "name": "expo-icon-overlays",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Text overlays for Expo app icons at prebuild time",
   "repository": {
     "type": "git",
