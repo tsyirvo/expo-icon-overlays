@@ -10,7 +10,6 @@ The plugin changes generated native icons, not your source images.
 </p>
 
 This is a community package, not an official Expo package.
-**Not published yet.** The installation command below applies after publication of `0.1.0`.
 
 ## Requirements
 
@@ -21,7 +20,7 @@ Node 22 support starts at `22.13.0`.
 ## Install and configure
 
 ```sh
-bun add expo-icon-overlays@0.1.0
+bun add expo-icon-overlays
 ```
 
 Add the plugin to your existing `app.config.ts`:

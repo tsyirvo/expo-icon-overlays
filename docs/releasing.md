@@ -21,15 +21,13 @@ Provenance links an artifact to a workflow and source commit. It does not detect
 
 ## Release checks and approval
 
-Release Please owns versions, changelogs and tags. A `Release-As: 0.1.0` commit footer on `main` sets the first version.
-The footer applies only to that release, so it needs no cleanup. Do not use `release-as` in the config, because it repeats the version until removed.
-To force another version, add a `Release-As: x.y.z` footer to a commit on `main`.
-The local preparation manifest stays at `0.0.0`. The workflow rejects that version.
+Release Please owns versions, changelogs and tags. Do not edit versions or create tags manually.
+To force a version, add a `Release-As: x.y.z` footer to a commit on `main`. It applies only to the next release.
 
 1. Review the release PR, dependency changes, lockfiles and workflow changes.
 2. Check that the tag's commit is on `main` and that the tag matches the package version. Later commits on `main` do not block a release.
 3. Dispatch `Publish` from the tag, not from `main`, with the same approved tag and the staging approval input:
-   `gh workflow run publish.yml --ref v0.1.0 -f tag=v0.1.0 -f approved=true`.
+   `gh workflow run publish.yml --ref vX.Y.Z -f tag=vX.Y.Z -f approved=true`.
 4. Require successful quality checks, source fixtures and isolated tarball checks on Node 22, Node 24 and Node 26.
    Require isolated tarball checks on Node `22.13.0` as well.
 5. Before environment approval, inspect the tarball listing and SHA-256 from the pack job.
@@ -39,20 +37,12 @@ The local preparation manifest stays at `0.0.0`. The workflow rejects that versi
 7. In npm, review the stage ID, version, source commit, provenance and tarball contents.
 8. Download the staged tarball. Compare its SHA-256 with the workflow output before approval.
 9. Approve that stage with npm 2FA. Approval makes the version public.
-10. Check `0.1.0`, the `latest` tag and public provenance on npm before updating consumers.
+10. Check the new version, the `latest` dist-tag and public provenance on npm before updating consumers.
 
 The workflow requires npm CLI 11.15.0 or later for staging. It fails if the runner supplies an older CLI.
 Do not install an unreviewed `npm@latest` in the OIDC job to bypass that check.
 If a check fails, stop. A rerun must use the same reviewed commit and a newly reviewed artifact.
 No local test replaces remote CI, npm approval or a check of the published artifact.
-
-## Starter integration after publication
-
-Replace the local link on the starter's `feat/icon-overlays` branch with `bun add expo-icon-overlays@0.1.0`.
-Inspect the manifest and lockfile. Neither may contain `file:` or `link:` references to this package.
-Run `bun run lint:ts`, `bun run lint:ci`, `bun run format:check` and `bun run test`.
-Get owner approval before pushing the branch or opening its PR.
-Do not merge before the npm package and its provenance are available.
 
 ## Response to a suspected compromise
 
