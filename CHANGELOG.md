@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/tsyirvo/expo-icon-overlays/compare/v0.1.0...v0.1.1) (2026-11-08)
+
+
+### Bug Fixes
+
+* **ci:** stage the release tarball as a local file ([#5](https://github.com/tsyirvo/expo-icon-overlays/issues/5)) ([23a800f](https://github.com/tsyirvo/expo-icon-overlays/commit/23a800faed0a65f6d41b54b1fa27ff2619601df5))
+
 ## 0.1.0 (2026-11-08)
 
 
