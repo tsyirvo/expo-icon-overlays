@@ -30,7 +30,8 @@ Generate candidates:
 bun scripts/render-references.ts
 ```
 
-The command writes ten candidates and a review sheet to `preview/references/`.
+The command writes fourteen candidates and a review sheet to `preview/references/`.
+Four candidates are transparent Icon Composer layers.
 Inspect every candidate before accepting the images:
 
 ```sh
@@ -41,6 +42,21 @@ bun run test
 The acceptance command replaces the committed images in `tests/references/`.
 Tests compare exact pixels and write failed comparisons to `preview/diffs/`.
 
+## Preview Icon Composer appearances
+
+Fixture checks inspect `.icon` layer pixels and metadata, not Apple's final rendering.
+On macOS with Xcode 26 or later, render a copied folder from a prebuilt app in each appearance:
+
+```sh
+ICTOOL="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executables/ictool"
+for rendition in Default Dark TintedLight TintedDark ClearLight ClearDark; do
+  "$ICTOOL" ios/<Project>/<Name>.icon --export-image --output-file "preview/$rendition.png" \
+    --platform iOS --rendition "$rendition" --width 512 --height 512 --scale 1
+done
+```
+
+CI runs on Linux and cannot run this check.
+
 ## Rendering rules
 
 - The approved strip height is 20% of the layout height. The minimum font size is 8%.
@@ -48,7 +64,8 @@ Tests compare exact pixels and write failed comparisons to `preview/diffs/`.
 - Adaptive and monochrome layouts use the 66/108 safe circle.
 - Round overlays retain the source alpha.
 - Adaptive previews show the launcher's 72/108 viewport.
-- Tinted icons use white strips and black text.
+- Tinted icons and tinted Icon Composer layers use white strips and black text.
+- Icon Composer layers start fully transparent, so only the strips and text are visible.
 - Monochrome icons use white strips with transparent text cutouts.
 - Fully opaque icons are written without an alpha channel, because App Store Connect rejects one on large icons.
 

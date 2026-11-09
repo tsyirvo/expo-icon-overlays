@@ -5,11 +5,11 @@
 `src/index.ts` connects the modules. It contains no validation rules, drawing,
 Expo mods or file operations. Shared public types belong in `src/types.ts`.
 
-| Module    | Only public functions           | Responsibility                                                                              |
-| --------- | ------------------------------- | ------------------------------------------------------------------------------------------- |
-| `options` | `parseOptions`, `resolveTokens` | Validate values, defaults, clashes and tokens without Expo, pixels or files.                |
-| `stamp`   | `stampIcon`                     | Draw overlays using layout, text fit, SVG, codecs and blends without Expo or project files. |
-| `native`  | `registerIconOverlayMods`       | Own Expo APIs, SDK differences, paths, discovery, warnings and native file updates.         |
+| Module    | Only public functions             | Responsibility                                                                              |
+| --------- | --------------------------------- | ------------------------------------------------------------------------------------------- |
+| `options` | `parseOptions`, `resolveTokens`   | Validate values, defaults, clashes and tokens without Expo, pixels or files.                |
+| `stamp`   | `stampIcon`, `renderOverlayLayer` | Draw overlays using layout, text fit, SVG, codecs and blends without Expo or project files. |
+| `native`  | `registerIconOverlayMods`         | Own Expo APIs, SDK differences, paths, discovery, warnings and native file updates.         |
 
 Get owner approval before adding a module export. Import other modules through their public index.
 Keep public access limited with `exports` in `package.json`.
@@ -26,7 +26,7 @@ Enforce module import boundaries with Biome `noRestrictedImports`.
 - Keep iOS and Android handling separate inside `native`.
 - Shape changes belong in types, `options` and `stamp`. A new shape must not require changes in `native`.
 - Keep `.icon` metadata and layer-file updates in `native`. Rendering must not interpret `icon.json`.
-- Define `.icon` rendering interfaces only during the approved follow-up phase, not in the first release.
+- `renderOverlayLayer` returns a transparent PNG layer. `native` owns the Icon Composer canvas size and layer names.
 
 ## Plugin flow
 

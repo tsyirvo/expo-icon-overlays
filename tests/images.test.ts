@@ -1,21 +1,14 @@
-// Compares stamped pixels with inspected references for each surface and overlay type.
+// Compares stamped icons and overlay layers with inspected references for each surface and overlay type.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 import { expect, it } from "vitest";
-import { parseOptions } from "../src/options/index";
-import { stampIcon } from "../src/stamp/index";
-import { createReferenceIcon, RENDER_CASES } from "./render-cases";
+import { RENDER_CASES, renderCase } from "./render-cases";
 
 it.concurrent.each(RENDER_CASES)(
   "renders literal text and approved geometry for $name",
   async (example) => {
-    const { overlays } = parseOptions({ overlays: example.overlays });
-    const output = await stampIcon(
-      createReferenceIcon(),
-      overlays,
-      example.surface
-    );
+    const output = await renderCase(example);
     const actual = PNG.sync.read(output);
     const expected = PNG.sync.read(
       await readFile(

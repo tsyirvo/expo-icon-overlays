@@ -102,9 +102,23 @@ The plugin changes only generated native PNG icons.
 It leaves source icons, Android backgrounds and the web favicon unchanged.
 
 On iOS, it supports single/light, dark and tinted PNG icons.
-It does not support `.icon` folders.
-Prebuild warns that no iOS overlays were applied for this format.
-Both source and copied `.icon` folders stay unchanged. The plugin reports no iOS success count.
+
+It also supports an Icon Composer folder set as a string in `ios.icon`.
+Expo copies that folder into the iOS project, and the plugin changes only the copy:
+
+- It adds `expo-icon-overlays.png` and `expo-icon-overlays-tinted.png` to the copy's `Assets/` folder.
+  Each layer is a transparent 1024px PNG that fills the Icon Composer canvas.
+- It adds one group in front of the app's groups in the copy's `icon.json`, without glass or shadow.
+  The tinted layer replaces the default layer in tinted and clear appearances, with a white strip and black text.
+  Default and dark appearances use the owner colors.
+- It builds the copy's `icon.json` from the source folder on each prebuild, so overlays never accumulate.
+
+The source folder stays unchanged. Prebuild fails when the source folder or its `icon.json` is missing,
+or when the source `Assets/` folder already uses one of the two layer filenames.
+It also fails when the source already has four visible groups, because Xcode rejects a fifth.
+Merge two groups in Icon Composer to make room for the overlay group.
+A disabled plugin changes no file, so the copy keeps both layer files until `prebuild --clean`.
+The restored `icon.json` no longer references them.
 
 On Android, it supports legacy, round, adaptive foreground and monochrome PNG icons.
 Round overlays retain the source alpha. Adaptive and monochrome layouts use the safe circle.
