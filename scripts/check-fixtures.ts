@@ -7,6 +7,7 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  rm,
   symlink,
   writeFile,
 } from "node:fs/promises";
@@ -30,10 +31,14 @@ const DENSITIES = [
   ["xxxhdpi", 192, 432],
 ] as const;
 const OVERLAY = { background: "#E02233", text: "DEV", type: "banner" };
-const IOS_SKIP = /No iOS overlays were applied/u;
-const IOS_APPLIED = /\(ios\): Applied/u;
 const ANY_APPLIED = /Applied .* overlays/u;
 const PLUGINS_ERROR = /plugins/u;
+const ICON_FOLDER = "ios/IconOverlaysFixture/Main.icon/";
+const ICON_FOLDER_METADATA = `${ICON_FOLDER}icon.json`;
+const ICON_FOLDER_LAYERS = new Map([
+  [`${ICON_FOLDER}Assets/expo-icon-overlays.png`, [224, 34, 51, 255]],
+  [`${ICON_FOLDER}Assets/expo-icon-overlays-tinted.png`, [255, 255, 255, 255]],
+]);
 const ANDROID_COUNTS = {
   adaptive: 15,
   appearances: 10,
@@ -333,14 +338,74 @@ function checkOverlayPixels(
   }
 }
 
+function readIconMetadata(
+  bytes: Buffer | undefined,
+  path: string
+): {
+  groups: { layers: { "image-name": string }[] }[];
+} {
+  assert.ok(bytes, `${path}: icon metadata is missing`);
+  return JSON.parse(bytes.toString("utf8"));
+}
+
+function checkIconFolder(baseline: Files, stamped: Files): void {
+  const source = readIconMetadata(
+    baseline.get(ICON_FOLDER_METADATA),
+    ICON_FOLDER_METADATA
+  );
+  const output = readIconMetadata(
+    stamped.get(ICON_FOLDER_METADATA),
+    ICON_FOLDER_METADATA
+  );
+  assert.deepEqual(
+    { ...output, groups: output.groups.slice(1) },
+    source,
+    `${ICON_FOLDER_METADATA}: the app's own metadata changed`
+  );
+  const imageNames = output.groups[0]?.layers.map(
+    (layer) => `${ICON_FOLDER}Assets/${layer["image-name"]}`
+  );
+  assert.deepEqual(
+    imageNames?.sort(),
+    [...ICON_FOLDER_LAYERS.keys()].sort(),
+    `${ICON_FOLDER_METADATA}: the front group does not reference the overlay layers`
+  );
+  for (const [path, strip] of ICON_FOLDER_LAYERS) {
+    const bytes = stamped.get(path);
+    assert.ok(bytes, `${path}: overlay layer is missing`);
+    const layer = PNG.sync.read(bytes);
+    assert.deepEqual(
+      [layer.width, layer.height],
+      [IOS_SIZE_PX, IOS_SIZE_PX],
+      path
+    );
+    assert.ok(
+      countTransparentPixels(layer) > 0,
+      `${path}: overlay layer hides the icon`
+    );
+    assert.ok(
+      countPixels(layer, strip) > 0,
+      `${path}: the strip color is absent`
+    );
+  }
+}
+
 function checkFinalAssets(setup: Setup, baseline: Files, stamped: Files): void {
+  const addedPaths =
+    setup === "icon-folder" ? [...ICON_FOLDER_LAYERS.keys()] : [];
   assert.deepEqual(
     [...stamped.keys()].sort(),
-    [...baseline.keys()].sort(),
+    [...baseline.keys(), ...addedPaths].sort(),
     "prebuild changed the asset list"
   );
+  if (setup === "icon-folder") {
+    checkIconFolder(baseline, stamped);
+  }
   const targets = findExpectedTargets(setup);
   for (const [path, original] of baseline) {
+    if (setup === "icon-folder" && path === ICON_FOLDER_METADATA) {
+      continue;
+    }
     const output = stamped.get(path);
     assert.ok(output, `${path}: generated asset is missing`);
     const size = targets.get(path);
@@ -361,16 +426,11 @@ function checkAppliedCounts(setup: Setup, output: string): void {
     output.includes(`(android): Applied 1 overlays to ${androidCount} icons`),
     output
   );
-  if (setup === "icon-folder") {
-    assert.match(output, IOS_SKIP);
-    assert.doesNotMatch(output, IOS_APPLIED);
-  } else {
-    const iosCount = setup === "appearances" ? 3 : 1;
-    assert.ok(
-      output.includes(`(ios): Applied 1 overlays to ${iosCount} icons`),
-      output
-    );
-  }
+  const iosCount = setup === "appearances" ? 3 : 1;
+  assert.ok(
+    output.includes(`(ios): Applied 1 overlays to ${iosCount} icons`),
+    output
+  );
 }
 
 async function checkSetup(setup: Setup): Promise<void> {
@@ -415,8 +475,18 @@ async function checkSetup(setup: Setup): Promise<void> {
   );
   await writeConfig(root, setup, "disabled");
   prebuild(root);
+  const restored = await readNativeAssets(root);
+  if (setup === "icon-folder") {
+    // A disabled plugin changes no file, so Expo's copy keeps the unreferenced layers until prebuild --clean.
+    for (const path of ICON_FOLDER_LAYERS.keys()) {
+      assert.ok(
+        restored.delete(path),
+        `${path}: expected leftover layer is missing`
+      );
+    }
+  }
   assert.deepEqual(
-    await readNativeAssets(root),
+    restored,
     baseline,
     `${setup}: disabling did not restore baseline`
   );
@@ -428,6 +498,9 @@ async function checkSetup(setup: Setup): Promise<void> {
   if (setup === "icon-folder") {
     const copied = await readFiles(root, "ios/IconOverlaysFixture/Main.icon");
     for (const [path, bytes] of copied) {
+      if (ICON_FOLDER_LAYERS.has(path)) {
+        continue;
+      }
       assert.deepEqual(
         bytes,
         source.get(path.replace("ios/IconOverlaysFixture/", "assets/")),
@@ -515,6 +588,48 @@ module.exports = config => withDangerousMod(config, [${JSON.stringify(platform)}
   }
   console.log(
     "PASS missing and non-PNG icons: both platforms fail with the target path and corrective action"
+  );
+}
+
+async function checkIconFolderErrors(): Promise<void> {
+  const reserved = await createApp("icon-folder");
+  const reservedLayer = "assets/Main.icon/Assets/expo-icon-overlays.png";
+  await copyFile(
+    join(reserved, "assets/Main.icon/Assets/layer.png"),
+    join(reserved, reservedLayer)
+  );
+  await writeConfig(reserved, "icon-folder", "active");
+  const reservedResult = runPrebuild(reserved);
+  assert.notEqual(
+    reservedResult.status,
+    0,
+    `${reservedLayer}: clash succeeded`
+  );
+  assert.ok(
+    reservedResult.output.includes(reservedLayer),
+    reservedResult.output
+  );
+  assert.deepEqual(
+    await readFile(join(reserved, ICON_FOLDER_METADATA)),
+    await readFile(join(reserved, "assets/Main.icon/icon.json")),
+    `${ICON_FOLDER_METADATA}: a failed update changed the copied metadata`
+  );
+  const missing = await createApp("icon-folder");
+  await rm(join(missing, "assets/Main.icon"), { recursive: true });
+  await writeConfig(missing, "icon-folder", "active");
+  const missingResult = runPrebuild(missing);
+  assert.notEqual(
+    missingResult.status,
+    0,
+    "Main.icon: missing source succeeded"
+  );
+  assert.ok(
+    missingResult.output.includes("Main.icon/icon.json") &&
+      missingResult.output.includes("expected icon file is missing"),
+    missingResult.output
+  );
+  console.log(
+    "PASS .icon errors: reserved layer names and missing source folders fail before writes and name the file"
   );
 }
 
@@ -619,6 +734,7 @@ if (selectedChecks.size === 0 || selectedChecks.has("duplicates")) {
 }
 if (selectedChecks.size === 0 || selectedChecks.has("errors")) {
   await checkBuildErrors();
+  await checkIconFolderErrors();
 }
 if (selectedChecks.size === 0 || selectedChecks.has("version")) {
   await checkVersionToken();

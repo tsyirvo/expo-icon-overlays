@@ -1,5 +1,7 @@
-// Supplies fixed icon pixels and overlay examples for reviewed image regressions.
+// Supplies fixed icon pixels, overlay examples and their rendering for reviewed image regressions.
 import { PNG } from "pngjs";
+import { parseOptions } from "../src/options/index";
+import { renderOverlayLayer, stampIcon } from "../src/stamp/index";
 import type { IconOverlay, Surface } from "../src/types";
 
 const ICON_SIZE_PX = 216;
@@ -16,6 +18,8 @@ const SURFACES: Surface[] = [
   "adaptive-foreground",
   "monochrome",
 ];
+// Icon Composer layers use only the iOS surfaces.
+const LAYER_SURFACES: Surface[] = ["square", "square-tinted"];
 const OVERLAY_EXAMPLES: { type: string; overlays: IconOverlay[] }[] = [
   {
     overlays: [
@@ -48,15 +52,33 @@ const OVERLAY_EXAMPLES: { type: string; overlays: IconOverlay[] }[] = [
   },
 ];
 
-export const RENDER_CASES = SURFACES.flatMap((surface) =>
-  OVERLAY_EXAMPLES.map((example) => ({
-    name: `${surface}-${example.type}`,
-    overlays: example.overlays,
-    surface,
-  }))
-);
+interface RenderCase {
+  input: "icon" | "transparent-layer";
+  name: string;
+  overlays: IconOverlay[];
+  surface: Surface;
+}
 
-export function createReferenceIcon(): Buffer {
+export const RENDER_CASES: RenderCase[] = [
+  ...SURFACES.flatMap((surface) =>
+    OVERLAY_EXAMPLES.map((example) => ({
+      input: "icon" as const,
+      name: `${surface}-${example.type}`,
+      overlays: example.overlays,
+      surface,
+    }))
+  ),
+  ...LAYER_SURFACES.flatMap((surface) =>
+    OVERLAY_EXAMPLES.map((example) => ({
+      input: "transparent-layer" as const,
+      name: `layer-${surface}-${example.type}`,
+      overlays: example.overlays,
+      surface,
+    }))
+  ),
+];
+
+function createReferenceIcon(): Buffer {
   const icon = new PNG({ height: ICON_SIZE_PX, width: ICON_SIZE_PX });
   for (let y = 0; y < ICON_SIZE_PX; y += 1) {
     for (let x = 0; x < ICON_SIZE_PX; x += 1) {
@@ -79,4 +101,11 @@ export function createReferenceIcon(): Buffer {
     }
   }
   return PNG.sync.write(icon);
+}
+
+export function renderCase(example: RenderCase): Promise<Buffer> {
+  const { overlays } = parseOptions({ overlays: example.overlays });
+  return example.input === "icon"
+    ? stampIcon(createReferenceIcon(), overlays, example.surface)
+    : renderOverlayLayer(ICON_SIZE_PX, overlays, example.surface);
 }

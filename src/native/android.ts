@@ -20,20 +20,27 @@ export function findAndroidIconTargets(
       `mipmap-${density}`
     );
     const targets: IconTarget[] = [
-      { path: join(directory, "ic_launcher.webp"), surface: "square" },
       {
+        kind: "png",
+        path: join(directory, "ic_launcher.webp"),
+        surface: "square",
+      },
+      {
+        kind: "png",
         path: join(directory, "ic_launcher_foreground.webp"),
         surface: "adaptive-foreground",
       },
     ];
     if (adaptiveIcon) {
       targets.push({
+        kind: "png",
         path: join(directory, "ic_launcher_round.webp"),
         surface: "round",
       });
     }
     if (adaptiveIcon?.monochromeImage) {
       targets.push({
+        kind: "png",
         path: join(directory, "ic_launcher_monochrome.webp"),
         surface: "monochrome",
       });

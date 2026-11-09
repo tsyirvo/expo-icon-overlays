@@ -1,4 +1,5 @@
-// Stamps ordered overlays onto a PNG using the selected surface's drawing rules.
+// Draws ordered overlays onto a PNG icon or a transparent layer using the selected surface's drawing rules.
+import { PNG } from "pngjs";
 import type { Overlay, Surface } from "../types";
 import { blendPixels } from "./blend";
 import { selectTextColor } from "./contrast";
@@ -8,15 +9,11 @@ import { rasterizeSvg } from "./rasterize";
 import { createStrip, createStripText, createSvg } from "./svg";
 import { fitText } from "./text-fit";
 
-export async function stampIcon(
-  png: Uint8Array,
+async function drawOverlays(
+  image: PNG,
   overlays: readonly Overlay[],
   surface: Surface
-): Promise<Buffer> {
-  if (overlays.length === 0) {
-    return Buffer.from(png);
-  }
-  const image = decodePng(png);
+): Promise<void> {
   for (const overlay of overlays) {
     const layout = calculateLayout(image.width, image.height, overlay, surface);
     // biome-ignore lint/performance/noAwaitInLoops: Compose in array order without retaining extra full-size layers.
@@ -47,5 +44,28 @@ export async function stampIcon(
       blendPixels(image.data, pixels, surface === "round" ? "atop" : "over");
     }
   }
+}
+
+export async function stampIcon(
+  png: Uint8Array,
+  overlays: readonly Overlay[],
+  surface: Surface
+): Promise<Buffer> {
+  if (overlays.length === 0) {
+    return Buffer.from(png);
+  }
+  const image = decodePng(png);
+  await drawOverlays(image, overlays, surface);
   return encodePng(image);
+}
+
+export async function renderOverlayLayer(
+  sizePx: number,
+  overlays: readonly Overlay[],
+  surface: Surface
+): Promise<Buffer> {
+  // pngjs zero-fills new images, so every pixel outside the overlays stays transparent.
+  const layer = new PNG({ height: sizePx, width: sizePx });
+  await drawOverlays(layer, overlays, surface);
+  return encodePng(layer);
 }
