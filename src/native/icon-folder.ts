@@ -8,6 +8,8 @@ const LAYER_CANVAS_SIZE_PX = 1024;
 const METADATA_FILENAME = "icon.json";
 const LAYER_DIRECTORY = "Assets";
 const RESERVED_NAME_PREFIX = "expo-icon-overlays";
+// actool fails the Xcode build when more groups than this are visible, including the overlay group.
+const MAXIMUM_VISIBLE_GROUP_COUNT = 4;
 // The first group draws in front. The tinted layer replaces the default layer in tinted
 // and clear appearances, so the strip keeps the PNG tinted rule instead of system desaturation.
 const OVERLAY_LAYERS: {
@@ -49,15 +51,52 @@ interface IconMetadata extends Record<string, unknown> {
 }
 
 function isMissingFileError(cause: unknown): boolean {
-  return cause instanceof Error && "code" in cause && cause.code === "ENOENT";
+  // ENOTDIR means ios.icon names a file instead of a folder.
+  return (
+    cause instanceof Error &&
+    "code" in cause &&
+    (cause.code === "ENOENT" || cause.code === "ENOTDIR")
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 function isIconMetadata(value: unknown): value is IconMetadata {
+  return isRecord(value) && Array.isArray(value.groups);
+}
+
+// Matches actool: "hidden" wins, and otherwise every specialization must hide the item,
+// starting with the default one, because an unspecialized appearance shows it.
+function isHiddenInEveryAppearance(item: Record<string, unknown>): boolean {
+  if (item.hidden === true) {
+    return true;
+  }
+  const specializations = item["hidden-specializations"];
   return (
-    typeof value === "object" &&
-    value !== null &&
-    "groups" in value &&
-    Array.isArray(value.groups)
+    Array.isArray(specializations) &&
+    specializations.some(
+      (specialization) =>
+        isRecord(specialization) &&
+        !("appearance" in specialization) &&
+        specialization.value === true
+    ) &&
+    specializations.every(
+      (specialization) =>
+        isRecord(specialization) && specialization.value === true
+    )
+  );
+}
+
+function isVisibleGroup(group: unknown): boolean {
+  return (
+    isRecord(group) &&
+    !isHiddenInEveryAppearance(group) &&
+    Array.isArray(group.layers) &&
+    group.layers.some(
+      (layer) => isRecord(layer) && !isHiddenInEveryAppearance(layer)
+    )
   );
 }
 
@@ -115,6 +154,19 @@ async function checkReservedLayerFilenames(sourcePath: string): Promise<void> {
   }
 }
 
+function checkVisibleGroupLimit(
+  sourcePath: string,
+  metadata: IconMetadata
+): void {
+  if (
+    metadata.groups.filter(isVisibleGroup).length >= MAXIMUM_VISIBLE_GROUP_COUNT
+  ) {
+    throw new Error(
+      `${join(sourcePath, METADATA_FILENAME)}: the icon already has ${MAXIMUM_VISIBLE_GROUP_COUNT} visible groups, so the overlay group would exceed Xcode's limit. Merge two groups in Icon Composer and run prebuild again.`
+    );
+  }
+}
+
 function addOverlayGroup(metadata: IconMetadata): IconMetadata {
   const overlayGroup = {
     layers: OVERLAY_LAYERS.map((layer) => ({
@@ -158,6 +210,7 @@ export async function createIconFolderWrites(
   // Expo skips the copy with only a warning when the source is missing, so reading the source
   // turns that case into an error instead of stamping a copy left by an earlier prebuild.
   const metadata = await readSourceMetadata(target.sourcePath);
+  checkVisibleGroupLimit(target.sourcePath, metadata);
   await checkReservedLayerFilenames(target.sourcePath);
   const layers = await renderOverlayLayers(target, overlays);
   return [

@@ -115,6 +115,8 @@ Expo copies that folder into the iOS project, and the plugin changes only the co
 
 The source folder stays unchanged. Prebuild fails when the source folder or its `icon.json` is missing,
 or when the source `Assets/` folder already uses one of the two layer filenames.
+It also fails when the source already has four visible groups, because Xcode rejects a fifth.
+Merge two groups in Icon Composer to make room for the overlay group.
 A disabled plugin changes no file, so the copy keeps both layer files until `prebuild --clean`.
 The restored `icon.json` no longer references them.
 

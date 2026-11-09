@@ -41,7 +41,7 @@ See [rendering](rendering.md) for previews and reference approval.
 It runs full CLI prebuilds in temporary apps and checks:
 
 - Final overlay pixels, dimensions, unchanged assets and applied counts.
-- `.icon` layer files and metadata, unchanged source folders and reserved or missing `.icon` files.
+- `.icon` layer files and metadata, unchanged source folders and reserved, missing or full-group-limit `.icon` files.
 - Duplicate rejection and missing or non-PNG files.
 - Version tokens and native fingerprints.
 - Repeated prebuilds, replacement text and disabled overlays.

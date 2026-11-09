@@ -71,6 +71,7 @@ Invalid options cause errors, even when overlays are disabled.
 - Icon changes require prebuild and a new native build. OTA updates cannot change icons.
 - iOS PNG support includes single/light, dark and tinted icons.
 - iOS Icon Composer (`.icon`) folders get overlay layers. Building them requires Xcode 26 or later.
+  The overlay layers use one of the four groups Xcode allows.
 - Android PNG support includes legacy, round, adaptive foreground and monochrome icons.
 - Source icons, Android backgrounds and the web favicon stay unchanged.
 - Disabling overlays leaves two unused layer files in the copied `.icon` folder until `prebuild --clean`.

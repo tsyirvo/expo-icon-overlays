@@ -8,7 +8,8 @@ export function findIosIconTargets(
   projectRoot: string
 ): IconTarget[] {
   const icons = config.ios?.icon;
-  const icon = typeof icons === "string" ? icons : config.icon;
+  // Expo also falls back to the root icon when ios.icon is an empty string.
+  const icon = (typeof icons === "string" && icons) || config.icon;
   const hasAppearanceIcons =
     typeof icons === "object" &&
     Boolean(icons.light || icons.dark || icons.tinted);

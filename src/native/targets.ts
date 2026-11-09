@@ -47,9 +47,9 @@ async function createPngWrite(
   }
 }
 
-async function writeFileWithDirectory(update: FileWrite): Promise<void> {
-  await mkdir(dirname(update.path), { recursive: true });
-  await writeFile(update.path, update.contents);
+async function writeFileWithDirectory(fileWrite: FileWrite): Promise<void> {
+  await mkdir(dirname(fileWrite.path), { recursive: true });
+  await writeFile(fileWrite.path, fileWrite.contents);
 }
 
 export async function updateIconTargets(
@@ -58,12 +58,12 @@ export async function updateIconTargets(
 ): Promise<void> {
   // Render every image before writing so a rendering failure leaves all icons untouched.
   // A failed write can still leave some icons stamped, and the next prebuild regenerates them.
-  const updates = await Promise.all(
-    targets.map((target) =>
+  const fileWrites = await Promise.all(
+    targets.map(async (target) =>
       target.kind === "png"
-        ? createPngWrite(target, overlays).then((update) => [update])
+        ? [await createPngWrite(target, overlays)]
         : createIconFolderWrites(target, overlays)
     )
   );
-  await Promise.all(updates.flat().map(writeFileWithDirectory));
+  await Promise.all(fileWrites.flat().map(writeFileWithDirectory));
 }

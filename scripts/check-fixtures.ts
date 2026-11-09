@@ -614,6 +614,27 @@ async function checkIconFolderErrors(): Promise<void> {
     await readFile(join(reserved, "assets/Main.icon/icon.json")),
     `${ICON_FOLDER_METADATA}: a failed update changed the copied metadata`
   );
+  const crowded = await createApp("icon-folder");
+  const crowdedMetadata = "assets/Main.icon/icon.json";
+  await writeFile(
+    join(crowded, crowdedMetadata),
+    JSON.stringify({
+      groups: Array.from({ length: 4 }, () => ({
+        layers: [{ "image-name": "layer.png", name: "Layer" }],
+      })),
+    })
+  );
+  await writeConfig(crowded, "icon-folder", "active");
+  const crowdedResult = runPrebuild(crowded);
+  assert.notEqual(
+    crowdedResult.status,
+    0,
+    `${crowdedMetadata}: a fifth visible group succeeded`
+  );
+  assert.ok(
+    crowdedResult.output.includes(crowdedMetadata),
+    crowdedResult.output
+  );
   const missing = await createApp("icon-folder");
   await rm(join(missing, "assets/Main.icon"), { recursive: true });
   await writeConfig(missing, "icon-folder", "active");
@@ -629,7 +650,7 @@ async function checkIconFolderErrors(): Promise<void> {
     missingResult.output
   );
   console.log(
-    "PASS .icon errors: reserved layer names and missing source folders fail before writes and name the file"
+    "PASS .icon errors: reserved layer names, full group limits and missing source folders fail before writes and name the file"
   );
 }
 
