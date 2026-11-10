@@ -31,9 +31,10 @@ Update Dependabot's directory coverage when adding local actions or a Bun projec
 Run actionlint and ShellCheck through `bun run hooks:check` after workflow or script changes.
 Local static checks do not prove that GitHub Actions ran successfully.
 
-CI must check Node 22, Node 24 and Node 26. The first release supports only Expo SDK 58.
-Widen support only after version-matched fixtures and final-asset checks pass.
-Keep minimum/latest SDK fixtures and final-image checks in the release gates.
+CI must check Node 22, Node 24 and Node 26, and the latest three Expo SDK majors (currently 56, 57 and 58).
+Keep the pull request and full profiles in `checks.yml` as described in the [development guide](../../guides/development.md#sdk-checks-and-test-policy).
+Widen the peer range only after version-matched fixtures and final-asset checks pass. Never narrow it to drop an untested SDK.
+Keep latest-version SDK fixtures and final-image checks in the release gates.
 Run weekly dist-tag probes against unpublished candidates only. Treat their failures as compatibility alerts,
 not evidence that a new SDK is supported.
 
@@ -46,8 +47,8 @@ Use npm trusted publishing with OIDC and provenance, not a long-lived npm write 
 Publication must require owner approval and all these checks:
 
 - Quality checks on the release commit.
-- Supported-SDK fixtures.
-- Isolated packed-package checks on Node 22, Node 24 and Node 26, including the minimum supported Node version.
+- Fixtures from the release tarball for each tested SDK.
+- Isolated packed-package checks on the minimum supported Node version.
 
 Publish the same tarball that passed the checks. Do not rebuild it in the publishing job.
 Keep publication manual and retain the protected `npm` environment.

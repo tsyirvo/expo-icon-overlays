@@ -64,8 +64,20 @@ const DEPENDENCY_ROOT = resolve(
   process.env.ICON_OVERLAYS_FIXTURE_ROOT ??
     join(import.meta.dirname, "../fixtures/expo-app")
 );
+const FIRST_SDK_WITH_DEFAULT_CLEAN = 57;
+const { version: EXPO_VERSION }: { version: string } = JSON.parse(
+  await readFile(
+    join(DEPENDENCY_ROOT, "node_modules/expo/package.json"),
+    "utf8"
+  )
+);
+// SDK 57 made prebuild clean by default and added --no-clean. SDK 56 keeps native folders without a flag.
+const KEEP_NATIVE_FOLDERS_ARGS =
+  Number.parseInt(EXPO_VERSION, 10) >= FIRST_SDK_WITH_DEFAULT_CLEAN
+    ? ["--no-clean"]
+    : [];
 const SUITE_ROOT = await mkdtemp(join(tmpdir(), "icon-overlays-fixtures-"));
-console.log(`Fixture directory: ${SUITE_ROOT}`);
+console.log(`Fixture directory: ${SUITE_ROOT} (Expo ${EXPO_VERSION})`);
 
 type Setup =
   | "single"
@@ -198,7 +210,7 @@ async function writeConfig(
 function runPrebuild(root: string): { status: number | null; output: string } {
   const result = spawnSync(
     "bun",
-    ["expo", "prebuild", "--no-install", "--no-clean"],
+    ["expo", "prebuild", "--no-install", ...KEEP_NATIVE_FOLDERS_ARGS],
     {
       cwd: root,
       encoding: "utf8",
@@ -659,7 +671,9 @@ function createFingerprint(root: string): string {
     "node",
     [
       "-e",
-      `require('@expo/fingerprint').createFingerprintAsync(process.cwd()).then(result => console.log('FINGERPRINT=' + result.hash))`,
+      // SDK 58 skips config versions by default. SDK 56 and 57 hash them unless fingerprint.config.js skips them.
+      `const { createFingerprintAsync, DEFAULT_SOURCE_SKIPS, SourceSkips } = require('@expo/fingerprint');
+createFingerprintAsync(process.cwd(), { sourceSkips: DEFAULT_SOURCE_SKIPS | SourceSkips.ExpoConfigVersions }).then(result => console.log('FINGERPRINT=' + result.hash))`,
     ],
     {
       cwd: root,
@@ -717,7 +731,7 @@ module.exports = config => withDangerousMod(config, ['ios', async config => { co
     "literal version: changed text did not alter the fingerprint"
   );
   console.log(
-    "PASS version token: resolves in the mod, preserves the balanced/appVersion fingerprint, literal text changes it"
+    "PASS version token: resolves in the mod, preserves a version-skipping appVersion fingerprint, literal text changes it"
   );
 }
 

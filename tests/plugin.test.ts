@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import withIconOverlays from "../src/index";
 
 const ACTIVE = { overlays: [{ text: "DEV", type: "banner" }] };
-const EXPO_RANGE_ERROR = /expo.*\^58\.0\.0/u;
+const EXPO_RANGE_ERROR = /expo.*\^56\.0\.0 \|\| \^57\.0\.0 \|\| \^58\.0\.0/u;
 
 async function createConsumer(version: string): Promise<ExportedConfig> {
   const root = await mkdtemp(join(tmpdir(), "icon-overlays-consumer-"));
@@ -21,12 +21,20 @@ async function createConsumer(version: string): Promise<ExportedConfig> {
 }
 
 describe("plugin config loading", () => {
-  it.each(["57.0.32", "59.0.0", "58.0.0-canary-test", "not-a-version"])(
+  it.each(["55.0.32", "59.0.0", "58.0.0-canary-test", "not-a-version"])(
     "rejects unsupported consumer expo %s with the supported range",
     async (version) => {
       const config = await createConsumer(version);
       expect(() => withIconOverlays(config, ACTIVE)).toThrow(EXPO_RANGE_ERROR);
       expect(config.mods).toBeUndefined();
+    }
+  );
+
+  it.each(["56.0.0", "57.0.32", "58.0.23"])(
+    "accepts supported consumer expo %s",
+    async (version) => {
+      const config = await createConsumer(version);
+      expect(() => withIconOverlays(config, ACTIVE)).not.toThrow();
     }
   );
 
@@ -43,7 +51,7 @@ describe("plugin config loading", () => {
   it.each([{ enabled: false, ...ACTIVE }, { overlays: [] }])(
     "leaves inactive configurations unchanged even with unsupported Expo",
     async (options) => {
-      const config = await createConsumer("57.0.32");
+      const config = await createConsumer("55.0.32");
       const original = structuredClone(config);
       expect(withIconOverlays(config, options)).toBe(config);
       expect(config).toEqual(original);

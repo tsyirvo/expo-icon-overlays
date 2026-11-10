@@ -8,8 +8,37 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: quality-${{ github.ref }}
+  # Cancel superseded pull request runs. Keep every main run.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect changes outside Markdown
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" != pull_request ] || git diff --name-only "$BASE_SHA" HEAD | grep -qv '\.md$'; then
+            printf 'code=true\n' >> "$GITHUB_OUTPUT"
+          else
+            printf 'code=false\n' >> "$GITHUB_OUTPUT"
+          fi
+
   checks:
+    needs: changes
     uses: ./.github/workflows/checks.yml
     with:
       ref: ${{ github.sha }}
+      profile: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
+      run-fixtures: ${{ needs.changes.outputs.code == 'true' }}
