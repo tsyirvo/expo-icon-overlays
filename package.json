@@ -46,22 +46,22 @@
   "dependencies": {
     "@resvg/resvg-wasm": "2.6.2",
     "pngjs": "7.0.0",
-    "semver": "7.7.4"
+    "semver": "7.8.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.3",
-    "@types/fontkit": "2.0.8",
-    "@types/node": "26.6.5",
+    "@biomejs/biome": "2.6.6",
+    "@types/fontkit": "2.0.9",
+    "@types/node": "26.6.6",
     "@types/pngjs": "6.0.5",
-    "@types/semver": "7.7.1",
-    "expo": "58.0.22",
+    "@types/semver": "7.8.0",
+    "expo": "58.0.23",
     "fontkit": "2.0.4",
-    "knip": "6.43.0",
-    "pixelmatch": "7.1.0",
-    "tsdown": "0.23.0",
-    "typescript": "6.0.3",
-    "ultracite": "8.1.0",
-    "vitest": "5.0.5"
+    "knip": "6.44.2",
+    "pixelmatch": "8.0.0",
+    "tsdown": "0.23.7",
+    "typescript": "7.0.2",
+    "ultracite": "8.1.1",
+    "vitest": "5.1.0"
   },
   "peerDependencies": {
     "expo": "^56.0.0 || ^57.0.0 || ^58.0.0"
