@@ -63,6 +63,7 @@ jobs:
     uses: ./.github/workflows/checks.yml
     with:
       ref: ${{ needs.resolve.outputs.sha }}
+      profile: full
 
   publish:
     needs: [ resolve, checks ]

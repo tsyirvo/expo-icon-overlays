@@ -15,7 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [ 22, 24, 26 ]
+        # Upcoming releases only. Released SDKs are covered by the main and release checks.
+        node: [ 26 ]
         expo: [ latest, next, canary ]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

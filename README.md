@@ -13,10 +13,11 @@ This is a community package, not an official Expo package.
 
 ## Requirements
 
-Expo SDK 56, 57 or 58 (`expo ^56.0.0 || ^57.0.0 || ^58.0.0`) and one of these Node versions:
+Expo (`expo ^56.0.0 || ^57.0.0 || ^58.0.0`) and one of these Node versions:
 `^22.13.0 || ^24.3.0 || ^26.0.0 || >=27.0.0`.
 Node 22 support starts at `22.13.0`.
-Support covers the latest three Expo SDK majors. Removing the oldest one requires a major release.
+CI tests the plugin on the latest three Expo SDK majors, currently 56, 57 and 58.
+Older SDKs in the range stay accepted, but new plugin changes are not tested against them.
 
 ## Install and configure
 
@@ -82,7 +83,7 @@ Invalid options cause errors, even when overlays are disabled.
 
 - [Configuration](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md): environments, version text and validation rules.
 - [Build caching](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/build-caching.md): native fingerprints and cached builds.
-- [Development](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/development.md): setup, checks and SDK support policy.
+- [Development](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/development.md): setup, checks and SDK test policy.
 - [Rendering](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/rendering.md): previews, image references and font generation.
 
 ### Release setup
