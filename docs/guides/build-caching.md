@@ -21,9 +21,28 @@ The token does not refresh icons in an installed binary.
 
 ## Tested behavior
 
-The fingerprint checks use Expo's default balanced preset with `runtimeVersion: { policy: "appVersion" }`.
+The fingerprint checks use `runtimeVersion: { policy: "appVersion" }` and skip config versions.
+SDK 58's default balanced preset already skips them.
 A version-only change preserves the fingerprint with a `{version}` overlay in these checks.
 Literal version text changes it.
+
+SDK 56 and SDK 57 hash `version` by default, with or without this plugin.
+A version change therefore changes their fingerprint, whatever the overlay text.
+To keep the fingerprint across version changes, skip config versions in `fingerprint.config.js`:
+
+```js
+const { SourceSkips } = require("@expo/fingerprint");
+
+/** @type {import("@expo/fingerprint").Config} */
+module.exports = {
+  // Keep the SDK 56 and 57 default skip and add config versions.
+  sourceSkips:
+    SourceSkips.PackageJsonAndroidAndIosScriptsIfNotContainRun |
+    SourceSkips.ExpoConfigVersions,
+};
+```
+
+`sourceSkips` replaces the default skips. Read Expo's fingerprint documentation for your SDK before changing it.
 
 Other fingerprint presets and runtime policies can behave differently.
 This result does not guarantee OTA compatibility for other configurations.

@@ -28,7 +28,7 @@ To force a version, add a `Release-As: x.y.z` footer to a commit on `main`. It a
 2. Check that the tag's commit is on `main` and that the tag matches the package version. Later commits on `main` do not block a release.
 3. Dispatch `Publish` from the tag, not from `main`, with the same approved tag and the staging approval input:
    `gh workflow run publish.yml --ref vX.Y.Z -f tag=vX.Y.Z -f approved=true`.
-4. Require successful quality checks, source fixtures and isolated tarball checks on Node 22, Node 24 and Node 26.
+4. Require successful quality checks, release-tarball fixtures for each supported SDK and isolated tarball checks on Node 22, Node 24 and Node 26.
    Require isolated tarball checks on Node `22.13.0` as well.
 5. Before environment approval, inspect the tarball listing and SHA-256 from the pack job.
    Expect only `build/`, `app.plugin.js`, font assets, licenses, README and `package.json`.
