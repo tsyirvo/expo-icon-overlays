@@ -1,8 +1,7 @@
 # Development
 
-Read [AGENTS.md](../../AGENTS.md) before changing code.
-Run the commands below from the repository root.
-Use Bun for installation and scripts.
+Run the commands below from the repository root. Use Bun for installation and scripts.
+Agents: read [AGENTS.md](../../AGENTS.md) before changing code.
 
 ## Setup
 
@@ -14,10 +13,15 @@ bun run hooks:install
 bun run build
 ```
 
-`bun run dev` watches the plugin build.
-`bun run test` invokes Vitest, not Bun's test runner.
+Building from source on Node 22 needs 22.18.0 or later, because `tsdown` requires it.
+The published package has no such limit; see the [README](../../README.md#requirements).
+
+`bun run dev` rebuilds the plugin on change.
+`bun run test` runs Vitest. Do not use `bun test`, which runs Bun's own test runner.
 
 ## Required checks
+
+Run all of these before you open a pull request:
 
 ```sh
 bun run lint:ts
@@ -30,48 +34,36 @@ bun run check:fixtures
 bun run check:package
 ```
 
-`lint` and `format` write files. Their `:ci` and `:check` variants do not.
-Tests use real rendering assets and reviewed PNG references.
-Config-loading tests check plugin errors and inactive entries without mocking package modules.
-See [rendering](rendering.md) for previews and reference approval.
+`lint` and `format` fix files in place. Their `:ci` and `:check` variants only report.
+Tests render real icons and compare them with reviewed images.
+See [rendering](rendering.md) for previews and how to update those images.
 
 ## Fixture checks
 
-`check:fixtures` builds the plugin and installs locked fixture dependencies.
-It runs full CLI prebuilds in temporary apps and checks:
+`check:fixtures` builds the plugin and runs full Expo prebuilds in temporary apps.
+It checks the final icon pixels and files on iOS and Android, including `.icon` folders,
+version tokens, fingerprints, repeated prebuilds, disabled overlays and error cases.
+See `scripts/check-fixtures.ts` for the full list.
 
-- Final overlay pixels, dimensions, unchanged assets and applied counts.
-- `.icon` layer files and metadata, unchanged source folders and reserved, missing or full-group-limit `.icon` files.
-- Duplicate rejection and missing or non-PNG files.
-- Version tokens and native fingerprints.
-- Repeated prebuilds, replacement text and disabled overlays.
+Each icon setup runs on both a fresh and an existing native project.
+The temporary apps are kept, and the script prints where they are.
+The checks need no secrets, but Expo may download its public native template.
+They don't compile an app or run it on a device.
 
-Each icon setup uses fresh and existing native projects.
-The script retains temporary apps and prints their location.
-Fixtures need no Doppler values or secrets. Expo may download its public native template.
-These checks do not compile an app or start a device.
+## Packed-package checks
 
-## SDK checks and test policy
+`check:package` packs the plugin and installs the tarball into a temporary app outside this repository.
+It checks that Expo resolves and loads the plugin, then runs the same final-icon checks.
+It uses the fixture's locked dependencies.
+Set `ICON_OVERLAYS_EXPO` to an Expo version, range or dist-tag to test another SDK.
 
-CI tests the latest three Expo SDK majors, currently 56, 57 and 58. The [README](../../README.md#requirements) lists the supported Node versions.
-CI checks the newest version of each tested SDK outside the cooldown, from the release tarball.
-Node 22 runs on `22.13.0`, the minimum supported version. Node 24 and Node 26 use their latest patch.
-Development checks use the latest patch of each tested Node major.
-Building from source requires Node 22.18.0 or later within Node 22 because `tsdown` requires it.
-Consumers use the compiled package and do not need `tsdown`.
+To check an existing tarball without rebuilding it:
 
-The test matrix follows the latest three SDK majors. It describes what CI checks, not the only versions that can work.
-Add a new SDK to the peer range only after it passes its fixtures as a candidate.
-Do not remove an SDK from the peer range when it leaves the matrix. It stays accepted, untested against later plugin changes.
+```sh
+sh scripts/check-package.sh /absolute/path/package.tgz
+```
 
-| Trigger                 | Quality | SDK fixtures                                                    | Locked packed package |
-| ----------------------- | ------- | --------------------------------------------------------------- | --------------------- |
-| Pull request            | Node 26 | Each tested SDK once, on a different Node: `22.13.0`, 24 and 26 | Node `22.13.0`        |
-| Push to `main`, release | Node 26 | Each tested SDK on Node `22.13.0`, 24 and 26                    | Node `22.13.0`        |
-
-Fixture and packed-package jobs run the shipped plugin on every Node major, so tooling checks use Node 26 only.
-Pull requests that change only Markdown files skip the fixture and packed-package jobs.
-New commits cancel the running checks of the same pull request.
+## Test other Expo versions
 
 ```sh
 bun run check:sdk -- 56.0.0
@@ -79,35 +71,34 @@ bun run check:sdk -- '^57.0.0'
 ICON_OVERLAYS_CANDIDATE=1 bun run check:sdk -- canary
 ```
 
-`check:sdk` resolves the requested Expo version, builds and packs the plugin, then runs the packed-package checks against that version.
-The temporary apps install the React and React Native versions that the selected Expo bundles.
-The plugin therefore loads the requested Expo, and the check fails if it resolves another copy.
-The temporary apps have no lockfile and keep the three-day cooldown.
-A range or dist-tag therefore selects the newest version older than three days, so a new Expo patch does not block CI.
-Fixtures use unmodified dependencies and let Expo select its image generator.
-Active-Sharp checks remain deferred until an official Expo release fixes its loader.
+`check:sdk` packs the plugin and runs the packed-package checks against the requested Expo version,
+with the React and React Native versions that Expo bundles.
+It fails if the plugin loads a different Expo copy.
+Ranges and dist-tags pick the newest version older than three days,
+so a brand-new Expo patch doesn't break CI.
+`ICON_OVERLAYS_CANDIDATE=1` tests an SDK outside the supported range.
+It widens the Expo peer range only in a temporary, unpublished copy of the package.
 
-SDK differences in the checks stay in the fixture script, not in the plugin:
+## CI
 
-- SDK 56 prebuild keeps native folders by default. SDK 57 and later need `--no-clean`.
-- SDK 56 and 57 fingerprints hash config versions by default. The version checks skip them on every SDK, as SDK 58 does by default.
+CI tests the latest three Expo SDK majors (currently 56, 57 and 58)
+on Node `22.13.0` (the minimum), and the latest Node 24 and Node 26.
 
-Weekly `latest`, `next` and `canary` probes run on Node 26 and widen the peer range only in temporary, unpublished candidate packages.
-Probe failures are compatibility alerts. They do not change released support and do not gate publication.
-See [build caching](build-caching.md) for the fingerprint checks and their limits.
+| Trigger                 | Quality checks | SDK fixtures                                        | Packed package |
+| ----------------------- | -------------- | --------------------------------------------------- | -------------- |
+| Pull request            | Node 26        | Each SDK once, on a different Node: 22.13.0, 24, 26 | Node 22.13.0   |
+| Push to `main`, release | Node 26        | Each SDK on Node 22.13.0, 24 and 26                 | Node 22.13.0   |
 
-## Packed-package checks
+- Pull requests that change only Markdown skip the fixture and packed-package jobs.
+- A new commit cancels the running checks of the same pull request.
+- A weekly job tests Expo's `latest`, `next` and `canary` releases.
+  Failures are early warnings; they don't change supported versions or block releases.
+- Checks with `sharp` as the active image generator are deferred until an official Expo release fixes its loader.
 
-`check:package` packs the build and installs it into a temporary app outside this repository.
-It checks CommonJS and Expo plugin resolution, config loading and the same final-asset suite.
-It uses the fixture's locked dependencies, not package dev dependencies or links.
-Set `ICON_OVERLAYS_EXPO` to an Expo version, range or dist-tag to check another SDK instead of the lockfile.
-The script retains temporary files and prints their location.
+SDK differences live in the fixture script, never in the plugin:
 
-To check an existing tarball without rebuilding it, run:
+- SDK 57 and later need `--no-clean` to keep native folders on prebuild. SDK 56 keeps them by default.
+- SDK 56 and 57 hash the app version in fingerprints. The checks skip it on every SDK, like SDK 58 does by default.
 
-```sh
-sh scripts/check-package.sh /absolute/path/package.tgz
-```
-
-Maintainers: see the [release procedure](../releasing.md) for publication controls and approval steps.
+See [tooling and release](../agents/rules/tooling-and-release.md#builds-and-ci) for when to change the supported SDK range,
+and the [release procedure](../releasing.md) for publishing.
