@@ -6,9 +6,9 @@ With a fingerprint-based runtime version policy, OTA compatibility changes too.
 
 ## Choose overlay text
 
-- **Development builds:** use a fixed `DEV` banner without a version.
+- **Development builds:** we recommend a fixed `DEV` banner without a version.
   A cached development build can show an older version, so a version on it can mislead.
-- **Versioned builds:** use `{version}`, not a literal version or commit SHA.
+- **Versioned builds:** we recommend `{version}` over a literal version or commit SHA.
   Literal text changes the plugin options, and so the fingerprint, every time the value changes.
   `{version}` stays the same in the options and is only replaced at prebuild.
 

@@ -28,8 +28,8 @@ export default {
 };
 ```
 
-For development builds, use a fixed `DEV` banner without a version.
-See [build caching](build-caching.md) for the reason.
+For development builds, we recommend a fixed `DEV` banner without a version.
+Cached development builds can keep showing an older version. See [build caching](build-caching.md) for details.
 
 ## Disable overlays
 
