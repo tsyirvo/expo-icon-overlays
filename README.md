@@ -59,51 +59,47 @@ export default {
 ```
 
 For production, set `enabled: false` or use `overlays: []`.
-See the configuration guide for environment-based options and version text.
+The [configuration guide](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md#select-overlays-by-environment) shows how to pick overlays per environment.
 
-Run `bun expo prebuild`. Then create a new native build with your project's normal build command.
-Repeat both steps after changing text, changing options or disabling overlays.
-Do not use `prebuild --clean` unless you intend to regenerate the native projects.
+To apply the overlays:
+
+1. Run `bun expo prebuild`.
+2. Create a new native build with your usual build command.
+
+Repeat both steps whenever you change the options, including when you disable overlays.
+You don't need `prebuild --clean`, which regenerates your native projects from scratch.
 
 ## Options
 
-| Field                   | Default                                        | Values                                                             |
-| ----------------------- | ---------------------------------------------- | ------------------------------------------------------------------ |
-| `enabled`               | `true`                                         | Boolean. `false` skips native changes.                             |
-| `overlays`              | Required                                       | Array of overlays. An empty array changes no files.                |
-| `overlays[].type`       | Required                                       | `banner` or `ribbon`.                                              |
-| `overlays[].text`       | Required                                       | Supported Latin text. Use `{version}` for the app version.         |
-| `overlays[].position`   | Banner: `bottom`. Ribbon: `top-right`.         | Banner: `top`, `bottom`. Ribbon: `top-left`, `top-right`.          |
-| `overlays[].background` | `#111111`                                      | `#RGB` or `#RRGGBB`.                                               |
-| `overlays[].color`      | Black or white, whichever has higher contrast. | `#RGB` or `#RRGGBB`. Tinted and monochrome icons use fixed colors. |
+| Field                   | Default                                        | Values                                                                |
+| ----------------------- | ---------------------------------------------- | --------------------------------------------------------------------- |
+| `enabled`               | `true`                                         | Boolean. `false` skips native changes.                                |
+| `overlays`              | Required                                       | Array of overlays. An empty array changes no files.                   |
+| `overlays[].type`       | Required                                       | `banner` or `ribbon`.                                                 |
+| `overlays[].text`       | Required                                       | Letters, digits and punctuation. `{version}` inserts the app version. |
+| `overlays[].position`   | Banner: `bottom`. Ribbon: `top-right`.         | Banner: `top`, `bottom`. Ribbon: `top-left`, `top-right`.             |
+| `overlays[].background` | `#111111`                                      | `#RGB` or `#RRGGBB`.                                                  |
+| `overlays[].color`      | Black or white, whichever has higher contrast. | `#RGB` or `#RRGGBB`. Tinted and monochrome icons use fixed colors.    |
 
-Overlays draw in array order. Each position must be unique.
-A top banner cannot share an array with a ribbon.
-Text shrinks to fit without truncation. Text that cannot fit causes a prebuild error.
-Keep text to about 7 capital letters. See [text length](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md#text-length) for the limits.
-Invalid options cause errors, even when overlays are disabled.
+Overlays draw in the order you list them, and each needs its own position.
+You can't combine a top banner with a ribbon.
+Text shrinks to fit. Keep it to about 7 capital letters; longer text can fail prebuild.
+See [overlay rules](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md#overlay-rules) and [text length](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md#text-length) for details.
 
-## Scope and limits
+## Platform support
 
-- Icon changes require prebuild and a new native build. OTA updates cannot change icons.
-- iOS PNG support includes single/light, dark and tinted icons.
-- iOS Icon Composer (`.icon`) folders get overlay layers. Building them requires Xcode 26 or later.
-  The overlay layers use one of the four groups Xcode allows.
-- Android PNG support includes legacy, round, adaptive foreground and monochrome icons.
-- Source icons, Android backgrounds and the web favicon stay unchanged.
-- Disabling overlays leaves two unused layer files in the copied `.icon` folder until `prebuild --clean`.
-- Installed variants need distinct application identifiers. The plugin does not set those identifiers.
+- **iOS:** light, dark and tinted PNG icons, and [Icon Composer](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md#icon-composer-icon-folders) (`.icon`) folders with Xcode 26 or later.
+- **Android:** legacy, round, adaptive and monochrome icons.
+- Your source images, Android backgrounds and the web favicon are never changed.
+- Icons need a new native build. OTA updates cannot change them.
+- To install several variants side by side, give each one its own bundle identifier and package name. The plugin does not set them.
 
 ## Documentation
 
-- [Configuration](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md): environments, version text and validation rules.
-- [Build caching](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/build-caching.md): native fingerprints and cached builds.
-- [Development](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/development.md): setup, checks and SDK test policy.
-- [Rendering](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/rendering.md): previews, image references and font generation.
-
-### Release setup
-
-Maintainers: follow the [release procedure](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/releasing.md).
+- [Configuration](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/configuration.md): environments, version text, supported text and Icon Composer.
+- [Build caching](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/build-caching.md): how overlay text affects fingerprints and cached builds.
+- [Development](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/development.md): contributor setup, checks and CI.
+- [Rendering](https://github.com/tsyirvo/expo-icon-overlays/blob/main/docs/guides/rendering.md): layout rules, previews and reference images.
 
 ## License
 
