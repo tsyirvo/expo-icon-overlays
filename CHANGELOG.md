@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.2](https://github.com/tsyirvo/expo-icon-overlays/compare/v0.1.1...v0.1.2) (2026-11-11)
+
+
+### Features
+
+* **ios:** apply overlays to Icon Composer (.icon) folders ([#7](https://github.com/tsyirvo/expo-icon-overlays/issues/7)) ([4af904a](https://github.com/tsyirvo/expo-icon-overlays/commit/4af904ae45918a4d96c1aeaea0a45a5061992885))
+
+
+### Documentation
+
+* simplify documentation and add branded icon previews ([#13](https://github.com/tsyirvo/expo-icon-overlays/issues/13)) ([a23e101](https://github.com/tsyirvo/expo-icon-overlays/commit/a23e1010fb2f44e1c9296c178f78c7b15b20bcfb))
+
 ## [0.1.1](https://github.com/tsyirvo/expo-icon-overlays/compare/v0.1.0...v0.1.1) (2026-11-08)
 
 
