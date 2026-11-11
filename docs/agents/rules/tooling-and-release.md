@@ -31,16 +31,17 @@ Update Dependabot's directory coverage when adding local actions or a Bun projec
 Run actionlint and ShellCheck through `bun run hooks:check` after workflow or script changes.
 Local static checks do not prove that GitHub Actions ran successfully.
 
-CI must check Node 22, Node 24 and Node 26, and the latest three Expo SDK majors (currently 56, 57 and 58).
-Keep the pull request and full profiles in `checks.yml` as described in the [development guide](../../guides/development.md#sdk-checks-and-test-policy).
-Widen the peer range only after version-matched fixtures and final-asset checks pass. Never narrow it to drop an untested SDK.
+CI must check Node 22, Node 24 and Node 26, and the latest three Expo SDK majors.
+Keep the pull request and full profiles in `checks.yml` matching the [CI table](../../guides/development.md#ci).
+Widen the Expo peer range only after version-matched fixtures and final-asset checks pass.
+Keep an SDK in the peer range after it leaves the CI matrix: it stays accepted, untested against later changes.
 Keep latest-version SDK fixtures and final-image checks in the release gates.
 Run weekly dist-tag probes against unpublished candidates only. Treat their failures as compatibility alerts,
 not evidence that a new SDK is supported.
 
 ## Releases
 
-Read the README's [release setup](../../../README.md#release-setup) before changing release automation.
+Read the [release procedure](../../releasing.md) before changing release automation.
 Keep Release Please responsible for release PRs and version tags.
 Use npm trusted publishing with OIDC and provenance, not a long-lived npm write token.
 
@@ -53,4 +54,3 @@ Publication must require owner approval and all these checks:
 Publish the same tarball that passed the checks. Do not rebuild it in the publishing job.
 Keep publication manual and retain the protected `npm` environment.
 Confirm external branch protection, environment reviewers and trusted-publisher settings before publication.
-The scaffold must not publish. Complete the first-release acceptance checks first.
