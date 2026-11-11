@@ -42,6 +42,18 @@ bun run test
 The acceptance command replaces the committed images in `tests/references/`.
 Tests compare exact pixels and write failed comparisons to `preview/diffs/`.
 
+## README images
+
+The README example icons in `docs/images/` come from the real stamping code.
+Regenerate them after a rendering change:
+
+```sh
+bun scripts/render-readme-images.ts
+```
+
+The script draws the useffect.sh mark on its brand gradient.
+iOS images use a rounded-square mask. Android images use the adaptive foreground surface in a circular launcher viewport.
+
 ## Preview Icon Composer appearances
 
 Fixture checks inspect `.icon` layer pixels and metadata, not Apple's final rendering.

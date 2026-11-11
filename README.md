@@ -1,23 +1,38 @@
 # expo-icon-overlays
 
+<a href="https://useffect.sh/seal/tsyirvo/expo-icon-overlays"><img align="right" width="120" src="https://useffect.sh/seal/tsyirvo/expo-icon-overlays.svg" alt="Maintained by useffect.sh"></a>
+
 Add text banners and ribbons to Expo app icons during prebuild.
 Use overlays to distinguish development, staging and production builds.
 The plugin changes generated native icons, not your source images.
 
-<p>
-  <img src="https://raw.githubusercontent.com/tsyirvo/expo-icon-overlays/main/tests/references/square-banner.png" width="160" alt="App icon with top and bottom text banners" />
-  <img src="https://raw.githubusercontent.com/tsyirvo/expo-icon-overlays/main/tests/references/square-ribbon.png" width="160" alt="App icon with diagonal text ribbons" />
-</p>
+<table>
+  <tr>
+    <th></th>
+    <th>Version banner</th>
+    <th>Staging ribbon</th>
+    <th>Banner and ribbon</th>
+  </tr>
+  <tr>
+    <th>iOS</th>
+    <td><img src="https://raw.githubusercontent.com/tsyirvo/expo-icon-overlays/main/docs/images/ios-banner.png" width="140" alt="iOS icon with a bottom v1.2.0 banner" /></td>
+    <td><img src="https://raw.githubusercontent.com/tsyirvo/expo-icon-overlays/main/docs/images/ios-ribbon.png" width="140" alt="iOS icon with a top-right STAGING ribbon" /></td>
+    <td><img src="https://raw.githubusercontent.com/tsyirvo/expo-icon-overlays/main/docs/images/ios-banner-ribbon.png" width="140" alt="iOS icon with a bottom v1.2.0 banner and a top-right STAGING ribbon" /></td>
+  </tr>
+  <tr>
+    <th>Android</th>
+    <td><img src="https://raw.githubusercontent.com/tsyirvo/expo-icon-overlays/main/docs/images/android-banner.png" width="140" alt="Android adaptive icon with a bottom v1.2.0 banner" /></td>
+    <td><img src="https://raw.githubusercontent.com/tsyirvo/expo-icon-overlays/main/docs/images/android-ribbon.png" width="140" alt="Android adaptive icon with a top-right STAGING ribbon" /></td>
+    <td><img src="https://raw.githubusercontent.com/tsyirvo/expo-icon-overlays/main/docs/images/android-banner-ribbon.png" width="140" alt="Android adaptive icon with a bottom v1.2.0 banner and a top-right STAGING ribbon" /></td>
+  </tr>
+</table>
 
 This is a community package, not an official Expo package.
 
 ## Requirements
 
-Expo (`expo ^56.0.0 || ^57.0.0 || ^58.0.0`) and one of these Node versions:
-`^22.13.0 || ^24.3.0 || ^26.0.0 || >=27.0.0`.
-Node 22 support starts at `22.13.0`.
-CI tests the plugin on the latest three Expo SDK majors, currently 56, 57 and 58.
-Older SDKs in the range stay accepted, but new plugin changes are not tested against them.
+- Expo SDK 56, 57 or 58
+- Node 22.13+, 24.3+ or 26+
 
 ## Install and configure
 
