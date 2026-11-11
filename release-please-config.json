@@ -5,7 +5,20 @@
       "release-type": "node",
       "include-component-in-tag": false,
       "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-sections": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "perf", "section": "Performance" },
+        { "type": "revert", "section": "Reverts" },
+        { "type": "docs", "section": "Documentation" },
+        { "type": "refactor", "section": "Other Changes" },
+        { "type": "chore", "section": "Other Changes", "hidden": true },
+        { "type": "build", "section": "Other Changes", "hidden": true },
+        { "type": "ci", "section": "Other Changes", "hidden": true },
+        { "type": "test", "section": "Other Changes", "hidden": true },
+        { "type": "style", "section": "Other Changes", "hidden": true }
+      ]
     }
   }
 }
