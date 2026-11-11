@@ -1,34 +1,28 @@
 # Build caching
 
-Expo uses a native fingerprint to identify native build inputs.
-Changing plugin options can change that fingerprint and prevent reuse of a cached native build.
-With fingerprint-based runtime policies, it can also change OTA compatibility.
+Expo computes a native fingerprint from your native build inputs, including plugin options.
+When the fingerprint changes, a cached native build can't be reused.
+With a fingerprint-based runtime version policy, OTA compatibility changes too.
 
 ## Choose overlay text
 
-For development, prefer a fixed `DEV` banner without a version.
-A cached native build can contain older icon text.
-
-A literal version or commit SHA changes plugin options whenever that value changes.
-Prefer `{version}` when a version overlay is necessary:
+- **Development builds:** we recommend a fixed `DEV` banner without a version.
+  A cached development build can show an older version, so a version on it can mislead.
+- **Versioned builds:** we recommend `{version}` over a literal version or commit SHA.
+  Literal text changes the plugin options, and so the fingerprint, every time the value changes.
+  `{version}` stays the same in the options and is only replaced at prebuild.
 
 ```ts
 { type: "ribbon", text: "{version}" }
 ```
 
-The plugin resolves this token from `config.version` during prebuild, not when the config loads.
-The token does not refresh icons in an installed binary.
+## Keep the fingerprint across version changes
 
-## Tested behavior
+With `{version}`, a version-only change keeps the same fingerprint, as long as Expo does not hash the app version itself:
 
-The fingerprint checks use `runtimeVersion: { policy: "appVersion" }` and skip config versions.
-SDK 58's default balanced preset already skips them.
-A version-only change preserves the fingerprint with a `{version}` overlay in these checks.
-Literal version text changes it.
-
-SDK 56 and SDK 57 hash `version` by default, with or without this plugin.
-A version change therefore changes their fingerprint, whatever the overlay text.
-To keep the fingerprint across version changes, skip config versions in `fingerprint.config.js`:
+- **SDK 58:** the default fingerprint settings already skip the version. Nothing to do.
+- **SDK 56 and 57:** the default settings hash the version, with or without this plugin.
+  To skip it, add `fingerprint.config.js`:
 
 ```js
 const { SourceSkips } = require("@expo/fingerprint");
@@ -42,10 +36,7 @@ module.exports = {
 };
 ```
 
-`sourceSkips` replaces the default skips. Read Expo's fingerprint documentation for your SDK before changing it.
+`sourceSkips` replaces the default skips. Read Expo's fingerprint documentation for your SDK before you change it.
 
-Other fingerprint presets and runtime policies can behave differently.
-This result does not guarantee OTA compatibility for other configurations.
-Icon changes still require prebuild and a new native build.
-
-See [configuration](configuration.md) for environment selection and token rules.
+This behavior is tested with `runtimeVersion: { policy: "appVersion" }`.
+Other fingerprint settings and runtime policies can behave differently, so check OTA compatibility for your setup.

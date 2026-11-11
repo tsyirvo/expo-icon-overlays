@@ -1,11 +1,54 @@
 # Rendering
 
+How overlays are drawn, and how to preview and approve rendering changes.
 Run these commands from the repository root.
 See [development](development.md) for setup and required checks.
 
+## Layout rules
+
+- The strip height is 20% of the layout. The minimum font size is 8% of the layout.
+- Square and round icons use the full icon as the layout.
+- Android adaptive and monochrome icons use the safe circle, 66/108 of the canvas.
+- Round icons keep the source icon's transparency.
+- Tinted icons and tinted Icon Composer layers use a white strip and black text.
+- Monochrome icons use a white strip with transparent text cut out of it.
+- Fully opaque icons are saved without an alpha channel, because App Store Connect rejects one on large icons.
+
+Text keeps its case and spacing, and SVG characters are escaped.
+Text shrinks until it fits, down to the minimum font size.
+The longest text that fits, as a multiple of the font size:
+
+| Overlay | Square and tinted icons | Round, adaptive and monochrome icons |
+| ------- | ----------------------- | ------------------------------------ |
+| Banner  | 5.5                     | 4.75                                 |
+| Ribbon  | 6.5                     | 5                                    |
+
+Android always generates an adaptive foreground, so Android builds get the narrower limits.
+See [text length](configuration.md#text-length) for the user-facing summary.
+
+## Icon Composer layers
+
+For an Icon Composer folder in `ios.icon`, Expo copies the folder into the iOS project.
+The plugin changes only that copy:
+
+- It adds `expo-icon-overlays.png` and `expo-icon-overlays-tinted.png` to the copy's `Assets/` folder.
+  Each is a transparent 1024px PNG that covers the whole canvas, so only the strips and text show.
+- It adds one group in front of the app's groups in the copy's `icon.json`, without glass or shadow.
+- Default and dark appearances use your colors. Tinted and clear appearances use the tinted layer.
+- It rebuilds the copy's `icon.json` from the source on every prebuild, so overlays never stack up.
+
+Prebuild fails when:
+
+- The source folder or its `icon.json` is missing.
+- The source `Assets/` folder already uses one of the two layer file names.
+- The source already has four visible groups. Xcode rejects a fifth.
+
+When the plugin is disabled, it changes no files. The copy keeps both layer files until `prebuild --clean`,
+but the restored `icon.json` no longer uses them.
+
 ## Preview overlays
 
-Supply a directory that contains these source PNG files:
+Put these source PNG files in one folder:
 
 - `ios-light.png`
 - `ios-dark.png`
@@ -17,35 +60,15 @@ Supply a directory that contains these source PNG files:
 bun run preview -- /path/to/icons
 ```
 
-Open `preview/index.html` to inspect all seven icon variants with short and long text.
-Each sheet shows circle, squircle and rounded-square masks at full size and 60px.
+Open `preview/index.html` to see all seven icon types with short and long text.
+Each sheet shows circle, squircle and rounded-square masks at full size and at 60px.
 `preview/contact-sheet.png` gives a compact overview.
-All preview output stays ignored by Git.
-
-## Review image references
-
-Generate candidates:
-
-```sh
-bun scripts/render-references.ts
-```
-
-The command writes fourteen candidates and a review sheet to `preview/references/`.
-Four candidates are transparent Icon Composer layers.
-Inspect every candidate before accepting the images:
-
-```sh
-bun scripts/render-references.ts --accept
-bun run test
-```
-
-The acceptance command replaces the committed images in `tests/references/`.
-Tests compare exact pixels and write failed comparisons to `preview/diffs/`.
+Git ignores everything in `preview/`.
 
 ## Preview Icon Composer appearances
 
 Fixture checks inspect `.icon` layer pixels and metadata, not Apple's final rendering.
-On macOS with Xcode 26 or later, render a copied folder from a prebuilt app in each appearance:
+To see the final result, you need macOS with Xcode 26 or later. Render a copied folder from a prebuilt app in each appearance:
 
 ```sh
 ICTOOL="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executables/ictool"
@@ -55,31 +78,45 @@ for rendition in Default Dark TintedLight TintedDark ClearLight ClearDark; do
 done
 ```
 
-CI runs on Linux and cannot run this check.
+CI runs on Linux, so it cannot run this check.
 
-## Rendering rules
+## Update reference images
 
-- The approved strip height is 20% of the layout height. The minimum font size is 8%.
-- Square and round layouts use the full icon size.
-- Adaptive and monochrome layouts use the 66/108 safe circle.
-- Round overlays retain the source alpha.
-- Adaptive previews show the launcher's 72/108 viewport.
-- Tinted icons and tinted Icon Composer layers use white strips and black text.
-- Icon Composer layers start fully transparent, so only the strips and text are visible.
-- Monochrome icons use white strips with transparent text cutouts.
-- Fully opaque icons are written without an alpha channel, because App Store Connect rejects one on large icons.
+Tests compare rendered icons with committed images in `tests/references/`, pixel for pixel.
+After a rendering change, generate new candidates:
 
-Rendering escapes SVG characters and preserves case and spacing.
-Text shrinks to fit without truncation.
-Text that cannot fit at the minimum size causes an error.
-See [supported text](configuration.md#supported-text) for character ranges and token rules,
-and [text length](configuration.md#text-length) for the fit limits.
+```sh
+bun scripts/render-references.ts
+```
+
+This writes fourteen candidates and a review sheet to `preview/references/`.
+Four of them are transparent Icon Composer layers.
+Inspect every candidate, then accept them:
+
+```sh
+bun scripts/render-references.ts --accept
+bun run test
+```
+
+Failed comparisons are written to `preview/diffs/`.
+
+## README images
+
+The README example icons in `docs/images/` come from the real stamping code.
+Regenerate them after a rendering change:
+
+```sh
+bun scripts/render-readme-images.ts
+```
+
+The script draws the useffect.sh mark on its brand gradient.
+iOS images use a rounded-square mask. Android images show the adaptive foreground in a circular launcher viewport.
 
 ## Regenerate the font
 
-The committed font is an Inter v4.1 Bold subset with weight 700 and optical size 14.
+The committed font is an Inter v4.1 Bold subset (weight 700, optical size 14).
 The script checks the upstream font's SHA-256 before subsetting.
-Inter omits U+0149. The script composes this glyph from Inter's apostrophe and `n` glyphs.
+Inter has no U+0149 glyph, so the script builds it from Inter's apostrophe and `n`.
 
 ```sh
 python3 -m venv /tmp/icon-overlays-font-tools
@@ -88,5 +125,5 @@ python3 -m venv /tmp/icon-overlays-font-tools
 bun run test
 ```
 
-Regeneration downloads the pinned upstream font and its license.
-Review both files before committing them.
+The script downloads the pinned upstream font and its license.
+Review both files before you commit them.

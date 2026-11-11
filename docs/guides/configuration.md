@@ -1,6 +1,6 @@
 # Configuration
 
-See the [README](../../README.md) for installation and the options table.
+See the [README](../../README.md) for installation, the options table and platform support.
 The public types are `IconOverlay` and `IconOverlayOptions`.
 
 ## Select overlays by environment
@@ -28,100 +28,84 @@ export default {
 };
 ```
 
-For development, prefer a fixed `DEV` banner without a version.
-A native build cache can reuse an older development build.
-See [build caching](build-caching.md) before adding version or commit text.
+For development builds, we recommend a fixed `DEV` banner without a version.
+Cached development builds can keep showing an older version. See [build caching](build-caching.md) for details.
 
 ## Disable overlays
 
-Set `enabled: false` or use `overlays: []`. Neither option changes native files.
-`enabled: false` also skips WASM loading.
-Options must remain valid even when overlays are disabled.
+Set `enabled: false` or use `overlays: []`. The plugin then changes no native files.
+Options must stay valid even when overlays are disabled.
 
-Run prebuild before rebuilding an existing native project, including after disabling overlays.
-The plugin does not refresh an installed app's icons.
+Disabling overlays does not restore the icons in an existing native project by itself.
+Run prebuild again, then create a new native build.
 
 ## Overlay rules
 
-- Overlays draw in array order.
-- Positions must be unique.
-- A top banner cannot share an array with a ribbon.
+- Overlays draw in the order you list them.
+- Each overlay needs its own position.
+- You can't combine a top banner with a ribbon.
 - Colors accept `#RGB` or `#RRGGBB`.
-- Tinted icons use white strips and black text.
-- Monochrome icons use white strips with transparent text cutouts.
+- iOS tinted icons and Android monochrome icons ignore your colors.
+  They use a white strip with black text (iOS) or with see-through text (Android).
 
-Unknown fields, invalid options, duplicate active plugin entries and unsupported Expo versions cause config-loading errors.
+Unknown fields, invalid options, duplicate plugin entries and unsupported Expo versions fail when the config loads.
 
 ## Version text
 
-`{version}` is the only token. The plugin resolves it from `config.version` during the native mod in prebuild.
-Missing or invalid version text causes a prebuild error.
-Build numbers and commit SHA tokens are not supported.
-Use literal commit text only if you accept its effect on [build caching](build-caching.md).
+`{version}` is replaced with your app's `version` when you run prebuild.
+It is the only supported token. Build numbers and commit SHAs are not supported.
+Prebuild fails when `version` is missing or the result does not fit.
+
+You can write a commit SHA as literal text, but it affects [build caching](build-caching.md).
 
 ## Supported text
 
-Text uses NFC normalization and preserves case and spacing.
-Supported characters are U+0020–U+007E and U+00A0–U+017F, except U+00AD.
+Text can use English letters, digits, punctuation and spaces,
+plus the accented letters of most Western and Central European languages.
+Case and spacing are kept as written.
 
-The plugin rejects:
+Prebuild fails for:
 
-- Whitespace-only text and control characters.
-- Unsupported characters and unknown tokens.
-- Literal or malformed braces.
+- Empty or whitespace-only text.
+- Emoji, control characters and other unsupported characters.
+- Braces other than `{version}`.
 
-`DEV & QA` and `<DEV>` render literally.
+Characters such as `&` and `<` render as written: `DEV & QA` and `<DEV>` both work.
+
+<details>
+<summary>Exact character ranges</summary>
+
+U+0020–U+007E and U+00A0–U+017F, except U+00AD (soft hyphen). Text is NFC-normalized first.
+
+</details>
 
 ## Text length
 
-Text shrinks to fit without truncation.
-Text that cannot fit at the minimum size causes a prebuild error.
-The longest text width depends on the overlay and icon type. Widths are multiples of the font size:
+Text shrinks to fit. It is never cut off. Text that cannot fit at the minimum size fails prebuild.
 
-| Overlay | Square and tinted icons | Round, adaptive and monochrome icons |
-| ------- | ----------------------- | ------------------------------------ |
-| Banner  | 5.5                     | 4.75                                 |
-| Ribbon  | 6.5                     | 5                                    |
+Keep text to about 7 capital letters. Android icons have less room than iOS icons,
+so this limit fits every icon on both platforms:
 
-Android always generates an adaptive foreground, so Android builds use the narrower limits.
-Keep text to about 7 capital letters to fit every icon type:
+| Text                                          | Result                    |
+| --------------------------------------------- | ------------------------- |
+| `STAGING`, `PREVIEW`, `10.12.3`, `1.2.3-rc.1` | Fits every icon.          |
+| `INTERNAL`                                    | Fails on Android banners. |
+| `1.2.3-beta.4`                                | Fits only iOS ribbons.    |
+| `DEVELOPMENT`, `PRODUCTION`                   | Fails everywhere.         |
 
-| Text                                          | Result                                           |
-| --------------------------------------------- | ------------------------------------------------ |
-| `STAGING`, `PREVIEW`, `10.12.3`, `1.2.3-rc.1` | Fits every icon type.                            |
-| `INTERNAL`                                    | Fails on round, adaptive and monochrome banners. |
-| `1.2.3-beta.4`                                | Fits only ribbons on square and tinted icons.    |
-| `DEVELOPMENT`, `PRODUCTION`                   | Fails on every icon type.                        |
+`{version}` text grows when your version grows.
+Test prerelease formats such as `-beta.10` before you rely on them.
 
-The length of `{version}` text can change with each release.
-A longer version can make a later prebuild fail, so test prerelease version formats before relying on them.
+## Icon Composer (`.icon`) folders
 
-## Platform behavior
+Set the folder path as a string in `ios.icon`. Building requires Xcode 26 or later.
 
-The plugin changes only generated native PNG icons.
-It leaves source icons, Android backgrounds and the web favicon unchanged.
+- Your source folder is never changed. The plugin edits only the copy that Expo puts in the iOS project.
+- The overlays are added as one extra layer group on top of your icon.
+  Xcode allows at most four groups, so your icon can have at most three.
+  If it has four, merge two of them in Icon Composer.
+- Prebuild fails when the source folder or its `icon.json` is missing.
+- After you disable overlays, the copy keeps two unused image files until `prebuild --clean`.
+  They do not appear in the icon.
 
-On iOS, it supports single/light, dark and tinted PNG icons.
-
-It also supports an Icon Composer folder set as a string in `ios.icon`.
-Expo copies that folder into the iOS project, and the plugin changes only the copy:
-
-- It adds `expo-icon-overlays.png` and `expo-icon-overlays-tinted.png` to the copy's `Assets/` folder.
-  Each layer is a transparent 1024px PNG that fills the Icon Composer canvas.
-- It adds one group in front of the app's groups in the copy's `icon.json`, without glass or shadow.
-  The tinted layer replaces the default layer in tinted and clear appearances, with a white strip and black text.
-  Default and dark appearances use the owner colors.
-- It builds the copy's `icon.json` from the source folder on each prebuild, so overlays never accumulate.
-
-The source folder stays unchanged. Prebuild fails when the source folder or its `icon.json` is missing,
-or when the source `Assets/` folder already uses one of the two layer filenames.
-It also fails when the source already has four visible groups, because Xcode rejects a fifth.
-Merge two groups in Icon Composer to make room for the overlay group.
-A disabled plugin changes no file, so the copy keeps both layer files until `prebuild --clean`.
-The restored `icon.json` no longer references them.
-
-On Android, it supports legacy, round, adaptive foreground and monochrome PNG icons.
-Round overlays retain the source alpha. Adaptive and monochrome layouts use the safe circle.
-
-Icon changes require prebuild and a new native build. OTA updates cannot change icons.
-Installed variants need distinct application identifiers. The plugin does not set those identifiers.
+See [rendering](rendering.md#icon-composer-layers) for the file names and layer details.
